@@ -16,6 +16,10 @@ export async function GET() {
         hasBetterAuthSecret: !!process.env.BETTER_AUTH_SECRET,
         betterAuthUrl: process.env.BETTER_AUTH_URL,
         nodeEnv: process.env.NODE_ENV,
+        // Trello
+        hasTrelloApiKey: !!process.env.TRELLO_API_KEY,
+        hasTrelloApiToken: !!process.env.TRELLO_API_TOKEN,
+        hasTrelloBoardId: !!process.env.TRELLO_BOARD_ID,
       },
     });
   } catch (error) {

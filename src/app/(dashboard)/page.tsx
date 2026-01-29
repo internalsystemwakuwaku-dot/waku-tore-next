@@ -33,8 +33,8 @@ const SYSTEM_TYPES = [
 ];
 
 export default function DashboardPage() {
-  const { cards, isLoading: cardsLoading, refresh } = useCardsWithAssignments();
-  const { lists, customFields, isLoading: listsLoading } = useTrelloData();
+  const { cards, isLoading: cardsLoading, error: cardsError, refresh } = useCardsWithAssignments();
+  const { lists, customFields, isLoading: listsLoading, error: listsError } = useTrelloData();
 
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [modalType, setModalType] = useState<'assignment' | 'move' | 'logs' | null>(null);
@@ -91,6 +91,29 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <p className="text-muted-foreground">データを読み込んでいます...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (cardsError || listsError) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold mb-2">データの読み込みに失敗しました</h2>
+          <p className="text-muted-foreground mb-4">
+            Trello APIへの接続に問題があります。環境変数（TRELLO_API_KEY, TRELLO_API_TOKEN, TRELLO_BOARD_ID）が正しく設定されているか確認してください。
+          </p>
+          <p className="text-sm text-red-500 mb-4">
+            {cardsError?.message || listsError?.message || 'Unknown error'}
+          </p>
+          <button
+            onClick={() => refresh()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            再試行
+          </button>
         </div>
       </div>
     );
