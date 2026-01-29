@@ -26,38 +26,55 @@ export default function LoginPage() {
     try {
       if (isSignUp) {
         // Sign up
+        console.log('Attempting sign up with:', { email: formData.email, name: formData.name });
+
         const result = await signUp.email({
           email: formData.email,
           password: formData.password,
           name: formData.name,
         });
 
+        console.log('Sign up result:', result);
+
         if (result.error) {
-          toast.error(result.error.message || 'アカウント作成に失敗しました');
+          console.error('Sign up error:', result.error);
+          toast.error(result.error.message || result.error.code || 'アカウント作成に失敗しました');
+          setIsLoading(false);
           return;
         }
 
-        toast.success('アカウントを作成しました');
+        if (result.data) {
+          toast.success('アカウントを作成しました');
+          router.push('/');
+          router.refresh();
+        }
       } else {
         // Sign in
+        console.log('Attempting sign in with:', { email: formData.email });
+
         const result = await signIn.email({
           email: formData.email,
           password: formData.password,
         });
 
+        console.log('Sign in result:', result);
+
         if (result.error) {
-          toast.error(result.error.message || 'ログインに失敗しました');
+          console.error('Sign in error:', result.error);
+          toast.error(result.error.message || result.error.code || 'ログインに失敗しました');
+          setIsLoading(false);
           return;
         }
 
-        toast.success('ログインしました');
+        if (result.data) {
+          toast.success('ログインしました');
+          router.push('/');
+          router.refresh();
+        }
       }
-
-      router.push('/');
-      router.refresh();
     } catch (error) {
-      toast.error('エラーが発生しました');
-      console.error(error);
+      console.error('Unexpected error:', error);
+      toast.error('エラーが発生しました: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsLoading(false);
     }

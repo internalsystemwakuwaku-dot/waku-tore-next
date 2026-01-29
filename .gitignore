@@ -42,3 +42,5 @@ next-env.d.ts
 local.db
 .env.local
 .env*.local
+
+.vercel

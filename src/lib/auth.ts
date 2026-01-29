@@ -4,6 +4,8 @@ import { db } from './db';
 import * as schema from './db/schema';
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: 'sqlite',
     schema: {
@@ -15,7 +17,8 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // Set to true in production with email setup
+    requireEmailVerification: false,
+    autoSignIn: true,
   },
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
@@ -28,6 +31,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.BETTER_AUTH_URL || 'http://localhost:3000',
     process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    'https://waku-tore-next.vercel.app',
   ],
 });
 
