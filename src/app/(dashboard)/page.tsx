@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { useCardsWithAssignments, useTrelloData } from '@/hooks/useTrelloData';
 import { CardList } from '@/components/dashboard/CardList';
 import { FilterBar } from '@/components/dashboard/FilterBar';
@@ -32,7 +33,25 @@ const SYSTEM_TYPES = [
   'その他',
 ];
 
-export default function DashboardPage() {
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="text-center max-w-md">
+        <div className="text-6xl mb-4">❌</div>
+        <h2 className="text-xl font-bold mb-2">エラーが発生しました</h2>
+        <p className="text-sm text-red-500 mb-4 break-all">{error.message}</p>
+        <button
+          onClick={resetErrorBoundary}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          再試行
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DashboardContent() {
   const { cards, isLoading: cardsLoading, error: cardsError, refresh } = useCardsWithAssignments();
   const { lists, customFields, isLoading: listsLoading, error: listsError } = useTrelloData();
 
@@ -168,5 +187,13 @@ export default function DashboardPage() {
         card={selectedCard}
       />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <DashboardContent />
+    </ErrorBoundary>
   );
 }
