@@ -33,13 +33,14 @@ const SYSTEM_TYPES = [
   'その他',
 ];
 
-function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+function ErrorFallback({ error, resetErrorBoundary }: { error: unknown; resetErrorBoundary: () => void }) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
   return (
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="text-center max-w-md">
         <div className="text-6xl mb-4">❌</div>
         <h2 className="text-xl font-bold mb-2">エラーが発生しました</h2>
-        <p className="text-sm text-red-500 mb-4 break-all">{error.message}</p>
+        <p className="text-sm text-red-500 mb-4 break-all">{errorMessage}</p>
         <button
           onClick={resetErrorBoundary}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
