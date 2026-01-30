@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
@@ -15,11 +15,16 @@ import {
 import { useGameStore, useLevelInfo, useXpProgress } from '@/stores/gameStore';
 
 export function Header() {
+  const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
   const levelInfo = useLevelInfo();
   const xpProgress = useXpProgress();
   const money = useGameStore((state) => state.money);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -43,7 +48,7 @@ export function Header() {
         </div>
 
         {/* Game Status */}
-        {session && (
+        {session && mounted && (
           <div className="flex items-center gap-4 flex-1">
             {/* Level Badge */}
             <div

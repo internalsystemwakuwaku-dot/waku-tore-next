@@ -1,12 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useThemeStore, THEMES } from '@/stores/themeStore';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const { theme, backgroundUrl, backgroundOpacity } = useThemeStore();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const root = document.documentElement;
 
     // Remove all theme classes
@@ -21,11 +28,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (themeConfig?.className) {
       root.classList.add(themeConfig.className);
     }
-  }, [theme]);
+  }, [theme, mounted]);
 
   return (
     <>
-      {backgroundUrl && (
+      {mounted && backgroundUrl && (
         <div
           className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
           style={{
