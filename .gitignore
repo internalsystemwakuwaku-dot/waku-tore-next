@@ -44,3 +44,8 @@ local.db
 .env*.local
 
 .vercel
+
+# Reference files
+*.gas
+*.html
+cookies.txt
