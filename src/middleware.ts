@@ -13,16 +13,16 @@ export function middleware(request: NextRequest) {
   }
 
   // Check for session cookie (Better Auth uses __Secure- prefix in production)
-  const sessionCookie =
-    request.cookies.get('__Secure-better-auth.session_token') ||
-    request.cookies.get('better-auth.session_token');
+  // const sessionCookie =
+  //   request.cookies.get('__Secure-better-auth.session_token') ||
+  //   request.cookies.get('better-auth.session_token');
 
-  if (!sessionCookie) {
-    // Redirect to login if no session
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  // if (!sessionCookie) {
+  //   // Redirect to login if no session
+  //   // const loginUrl = new URL('/login', request.url);
+  //   // loginUrl.searchParams.set('callbackUrl', pathname);
+  //   // return NextResponse.redirect(loginUrl);
+  // }
 
   return NextResponse.next();
 }
