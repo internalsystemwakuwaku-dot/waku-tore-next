@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <title>わく☆とれ</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫡</text></svg>">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Klee+One:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Orbitron:wght@500;700&family=Shippori+Mincho:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <?!= include('stylesheet'); ?>
+</head>
+
+<body>
+
+  <div id="rainbow-overlay" class="rainbow-overlay"></div>
+  <div id="desktop-mascot" class="hidden" onclick="GM.pokeMascot()">🐱</div>
+  <div id="xp-toast-container"
+    style="position:fixed; bottom: 100px; right: 20px; display:flex; flex-direction:column; gap:10px; pointer-events:none; z-index:4000;">
+  </div>
+
+  <!-- レベルアップファンファーレ -->
+  <div id="levelup-modal" class="levelup-overlay hidden" onclick="closeLevelUp()">
+    <div class="levelup-box">
+      <h2>LEVEL UP!</h2>
+      <div style="font-size:60px;">🎉</div>
+      <div id="levelup-rank" class="levelup-rank">見習い</div>
+      <p>新しい機能が解放されました！</p>
+      <div style="font-size:12px; opacity:0.8;">(クリックして閉じる)</div>
+    </div>
+  </div>
+
+  <!-- おみくじモーダル -->
+  <div id="omikuji-modal" class="modal-overlay hidden">
+    <div class="modal" style="text-align:center;">
+      <h3>🔮 今日の運勢</h3>
+      <div id="omikuji-result" style="font-size:40px; margin:20px 0; color:#d32f2f; font-weight:bold;"></div>
+      <p id="omikuji-item" style="font-size:14px; margin-bottom:20px;"></p>
+      <p id="omikuji-bonus" style="font-size:12px; color:#f39c12; font-weight:bold;"></p>
+      <button class="btn-save" onclick="document.getElementById('omikuji-modal').classList.add('hidden')">閉じる</button>
+    </div>
+  </div>
+
+  <div id="bgm-player" class="minimized" onclick="if(this.classList.contains('minimized')) toggleBgmMinify()">
+    <div class="bgm-minimized-icon">
+      <span class="material-icons">headphones</span>
+    </div>
+    <div class="bgm-header-row">
+      <div class="bgm-header">☕ 集中BGM</div>
+      <button class="btn-bgm-minimize" onclick="event.stopPropagation(); toggleBgmMinify()"><span class="material-icons"
+          style="font-size:16px;">remove</span></button>
+    </div>
+    <div class="bgm-content" style="display:flex; flex-direction:column; gap:8px;">
+      <div class="bgm-btn active" id="btn-bgm-off" onclick="stopBgm()">
+        <span class="material-icons" style="font-size:16px;">volume_off</span> オフ
+      </div>
+      <div class="bgm-btn" onclick="toggleBgm('fire')">
+        <span class="material-icons" style="font-size:16px;">local_fire_department</span> 焚き火
+      </div>
+      <div class="bgm-btn" onclick="toggleBgm('rain')">
+        <span class="material-icons" style="font-size:16px;">umbrella</span> 雨の音
+      </div>
+      <div class="bgm-btn" onclick="toggleBgm('cafe')">
+        <span class="material-icons" style="font-size:16px;">storefront</span> カフェ
+      </div>
+
+      <!-- 解放BGM -->
+      <div class="bgm-btn hidden" id="bgm-deepsea" onclick="toggleBgm('deepsea')">
+        <span class="material-icons" style="font-size:16px;">waves</span> Deep Sea
+      </div>
+      <div class="bgm-btn hidden" id="bgm-cyber" onclick="toggleBgm('cyber')">
+        <span class="material-icons" style="font-size:16px;">memory</span> Cyber City
+      </div>
+
+      <input type="range" class="bgm-volume" min="0" max="1" step="0.1" value="0.3"
+        oninput="changeBgmVolume(this.value)" title="音量">
+    </div>
+  </div>
+
+  <div id="login-overlay">
+    <div class="login-box">
+      <h2>ログイン</h2>
+      <input type="text" id="login-id" class="login-input" placeholder="ID">
+      <input type="password" id="login-pass" class="login-input" placeholder="パスワード">
+      <button class="btn-login" onclick="performLogin()">ログイン</button>
+      <div id="login-error" class="login-error"></div>
+    </div>
+  </div>
+
+  <div id="bg-video-container">
+    <video autoplay muted loop id="bg-video"></video>
+    <div id="bg-overlay"></div>
+  </div>
+
+  <div id="loading" class="hidden">
+    <div><span class="material-icons" style="vertical-align:middle; animation: spin 1s infinite linear;">refresh</span>
+      データを取得中...</div>
+  </div>
+
+  <div id="toast">完了しました</div>
+
+  <div id="context-menu" class="context-menu hidden">
+    <div class="context-menu-item" id="ctx-open"><span class="material-icons" style="font-size:16px;">open_in_new</span>
+      Trelloを開く</div>
+    <div class="context-menu-item" id="ctx-copy"><span class="material-icons"
+        style="font-size:16px;">content_copy</span> リンクをコピー</div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" id="ctx-move"><span class="material-icons"
+        style="font-size:16px;">drive_file_move</span> 移動...</div>
+    <div class="context-menu-item" id="ctx-assign"><span class="material-icons" style="font-size:16px;">edit</span>
+      担当設定...</div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" id="ctx-pin"><span class="material-icons" style="font-size:16px;">push_pin</span>
+      ピン留め切り替え</div>
+  </div>
+
+  <div id="sidebar-overlay" class="sidebar-overlay hidden" onclick="closeSidebar()"></div>
+  <div id="sidebar-right" class="sidebar-right">
+    <div class="sidebar-header">
+      <div class="sidebar-header-top">
+        <h3 id="sidebar-title"><span class="material-icons" style="color:#0079bf;">today</span> 予定のカード</h3>
+        <button class="close-sidebar-btn" onclick="closeSidebar()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="search-container" style="width: 100%;">
+        <input type="text" id="sidebar-search-input" placeholder="店舗名で検索..." oninput="handleSidebarSearchInput()">
+        <span id="sidebar-search-clear-btn" class="material-icons search-action-icon hidden"
+          onclick="clearSearch()">close</span>
+        <span id="sidebar-search-glass-icon" class="material-icons search-action-icon">search</span>
+      </div>
+    </div>
+
+    <div id="sidebar-content"></div>
+  </div>
+
+  <header>
+    <div class="header-top">
+      <h1>
+        <span class="material-icons">schedule</span> わく☆とれ <span
+          style="font-size:12px; font-weight:normal; color:#ddd; margin-left:5px;">v2.0.0</span>
+        <button class="btn-toggle-header" onclick="toggleHeader()" title="メニューの開閉">
+          <span class="material-icons" id="toggle-icon">expand_less</span>
+        </button>
+      </h1>
+
+      <div class="game-status-bar" id="game-status-bar" style="display:none;">
+        <div class="cookie-clicker-area">
+          <div class="btn-cookie" onclick="GM.clickCookie(event)" title="クリックしてXPゲット！">🍪</div>
+          <div class="auto-clicker-status">
+            <span id="click-power-disp">Click: +2 XP</span>
+            <span id="auto-xp-disp">Auto: 0 XP/s</span>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:flex-start;">
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span class="game-level-badge" id="game-level">Lv.1</span>
+            <span class="game-rank-text" id="game-rank">見習い</span>
+            <span id="game-title" style="font-size:10px; color:#555;"></span>
+
+            <div class="game-btn-group">
+              <button class="btn-game-mini" onclick="openShopModal()" title="自動化ショップ">
+                <span class="material-icons" style="font-size:12px;">shopping_cart</span>
+              </button>
+              <button class="btn-game-mini" onclick="openRankingModal()" title="ランキング">
+                <span class="material-icons" style="font-size:12px;">leaderboard</span>
+              </button>
+              <button class="btn-game-mini" onclick="GM.manualSave()" title="データを保存">
+                <span class="material-icons" style="font-size:12px;">save</span>
+              </button>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center;">
+            <div class="game-xp-container" title="次のレベルまで">
+              <div class="game-xp-bar" id="game-xp-bar"></div>
+            </div>
+            <span class="game-xp-text" id="game-xp-text">0 / 100</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-money-area">
+        <span id="game-money-disp">0</span>
+        <div style="display:flex; gap:4px; margin-left:10px;">
+
+          <button id="btn-open-race" class="btn-race" onclick="GM.openRace()" disabled title="開催時間外です">
+            競馬
+          </button>
+
+          <button class="btn-race"
+            style="background: linear-gradient(to bottom, #2c3e50, #34495e); border-color: #1a252f;"
+            onclick="GM.openPastResults()">
+            結果
+          </button>
+
+          <button class="btn-gacha" onclick="GM.openGacha()" title="1回500円">
+            ガチャ
+          </button>
+
+          <button class="btn-race"
+            style="background: linear-gradient(to bottom, #f1c40f, #f39c12); border-color: #d68910;"
+            onclick="GM.openMoneyRanking()" title="所持金ランキング">
+            長者
+          </button>
+        </div>
+      </div>
+
+      <div id="header-controls" style="display:flex; gap:10px; align-items:center; margin-left:auto;">
+        <div class="quick-filters">
+          <button class="btn-quick-filter btn-today" onclick="toggleSidebar('today')">本日予定</button>
+          <button class="btn-quick-filter btn-tomorrow" onclick="toggleSidebar('tomorrow')">明日予定</button>
+          <button class="btn-quick-filter btn-nextMonday" onclick="toggleSidebar('nextMonday')">翌週月曜予定</button>
+
+          <button class="btn-quick-filter btn-overdue" onclick="setQuickFilter('overdue')">期限切れ</button>
+          <button class="btn-quick-filter btn-due24h" onclick="setQuickFilter('due24h')">24時間以内</button>
+          <button class="btn-quick-filter btn-due3d" onclick="setQuickFilter('due3d')">3日以内</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <div style="display:flex; gap:4px;">
+            <button class="refresh-btn" onclick="loadData()" title="更新">
+              <span class="material-icons">sync</span>
+            </button>
+            <button class="btn-chart" onclick="openDashboard()" title="ダッシュボード">
+              <span class="material-icons">analytics</span>
+            </button>
+            <button class="btn-memo" onclick="openMemoModal()" title="メモ帳">
+              <span class="material-icons" style="font-size:16px;">edit_note</span>
+            </button>
+            <button class="btn-omikuji" onclick="GM.showOmikuji()" title="今日の運勢">
+              <span class="material-icons" style="font-size:16px;">casino</span>
+            </button>
+          </div>
+          <button class="btn-settings" onclick="openSettingsModal()" title="設定">
+            <span class="material-icons" style="font-size:14px;">settings</span> 設定
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-bar" id="filter-bar">
+      <button class="btn-bulk-mode" id="btn-bulk-mode" onclick="toggleBulkMode()">
+        <span class="material-icons" style="font-size:16px;">checklist</span> 選択モード
+      </button>
+
+      <div style="display:flex; gap:2px; margin-right:10px;">
+        <button class="btn-quick-filter" onclick="unlockAllLists()" title="全リストのロックを解除（移動可能に）">
+          <span class="material-icons" style="font-size:16px;">lock_open</span> 全解除
+        </button>
+        <button class="btn-quick-filter" onclick="lockAllLists()" title="全リストをロック（移動不可に）">
+          <span class="material-icons" style="font-size:16px;">lock</span> 全ロック
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <label>並び替え</label>
+        <select id="sort-mode" onchange="applyFilters()">
+          <option value="none">Trello順</option>
+          <option value="due-asc">期限が近い順</option>
+          <option value="updated-desc">更新日が新しい順</option>
+          <option value="name-asc">店舗名順</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>予約システム担当</label>
+        <select id="filter-system" onchange="applyFilters()">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>システム種別</label>
+        <select id="filter-systemType" onchange="applyFilters()">
+          <option value="">すべて</option>
+          <option value="中江式予約システム/アンケート">中江式予約システム/アンケート</option>
+          <option value="Mokare">Mokare</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Trelloラベル</label>
+        <select id="filter-trelloLabel" onchange="applyFilters()">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>構築担当</label>
+        <select id="filter-construction" onchange="applyFilters()">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>商談担当</label>
+        <select id="filter-sales" onchange="applyFilters()">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>MTG担当</label>
+        <select id="filter-mtg" onchange="applyFilters()">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>業種</label>
+        <select id="filter-industry" onchange="applyFilters()">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>都道府県</label>
+        <select id="filter-prefecture" onchange="applyFilters()">
+          <option value="">すべて</option>
+        </select>
+      </div>
+      <div class="filter-group" style="margin-left: 10px; border-left: 1px solid #ddd; padding-left: 10px;">
+        <label>列の表示設定</label>
+        <div class="dropdown-container">
+          <button class="btn-toggle-menu" onclick="toggleColumnMenu(event)">
+            <span class="material-icons" style="font-size:14px;">view_column</span> 表示切替 ▼
+          </button>
+          <div id="column-menu" class="dropdown-menu hidden" onclick="event.stopPropagation()"></div>
+        </div>
+      </div>
+      <div class="search-container">
+        <input type="text" id="search-input" placeholder="店舗名で検索..." oninput="handleSearchInput()">
+        <span id="search-clear-btn" class="material-icons search-action-icon hidden"
+          onclick="clearSearch()">close</span>
+        <span id="search-glass-icon" class="material-icons search-action-icon">search</span>
+      </div>
+      <div style="font-size:12px; margin-left:auto;"><span id="total-count">0</span>件</div>
+    </div>
+    </div>
+  </header>
+
+  <div id="error-msg" class="hidden"></div>
+  <div id="dashboard"></div>
+
+  <div id="bulk-action-bar">
+    <div style="font-weight:bold;">
+      <span id="bulk-count">0</span>件 選択中
+      <button
+        style="margin-left:10px; background:transparent; border:1px solid white; color:white; border-radius:4px; cursor:pointer;"
+        onclick="toggleBulkMode(false)">キャンセル</button>
+    </div>
+    <div class="bulk-actions">
+      <button class="btn-bulk-action" onclick="openBulkAssignModal()">
+        <span class="material-icons">manage_accounts</span> 担当者一括設定
+      </button>
+      <button class="btn-bulk-action" onclick="openBulkMoveModal()">
+        <span class="material-icons">drive_file_move</span> 一括移動
+      </button>
+    </div>
+  </div>
+
+  <div id="assignment-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between;">
+        <h3>設定</h3>
+        <button style="border:none; background:none; cursor:pointer;" onclick="togglePinFromModal()">
+          <span id="modal-pin-icon" class="material-icons" style="color:#ccc;">push_pin</span>
+        </button>
+      </div>
+      <p id="modal-card-name"
+        style="font-size:12px; color:#666; margin-bottom:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      </p>
+
+      <div class="modal-move-area">
+        <button class="btn-modal-move" onclick="openMoveFromAssignment()">
+          <span class="material-icons">drive_file_move</span> このカードを別のリストへ移動
+        </button>
+      </div>
+      <div class="form-group"
+        style="background:#f0f8ff; padding:10px; border-radius:4px; border:1px solid #cceeff; margin-bottom:15px;">
+        <label style="color:#0079bf;">期限日時 (Trello同期)</label>
+        <div style="display:flex; gap:5px;">
+          <input type="datetime-local" id="input-trello-due" style="flex:1;">
+          <button type="button" onclick="clearDueDate()"
+            style="border:1px solid #eb5a46; background:#fff; color:#eb5a46; border-radius:4px; cursor:pointer; padding:0 8px;"
+            title="期限を削除">
+            <span class="material-icons" style="font-size:18px; vertical-align:middle;">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <div class="form-group" style="flex:1;">
+          <label>構築番号</label>
+          <select id="input-constructionNumber">
+            <option value="">(未設定)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1; display:flex; flex-direction:column; gap:8px;">
+          <div>
+            <label>システム種別 1</label>
+            <select id="input-systemType">
+              <option value="">(未設定)</option>
+              <option value="中江式予約システム/アンケート">中江式予約システム/アンケート</option>
+              <option value="Mokare">Mokare</option>
+            </select>
+          </div>
+          <div>
+            <label>システム種別 2</label>
+            <select id="input-systemType2">
+              <option value="">(未設定)</option>
+              <option value="中江式予約システム/アンケート">中江式予約システム/アンケート</option>
+              <option value="Mokare">Mokare</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="form-group"><label>リンク先URL</label><input type="text" id="input-customLink" placeholder="https://...">
+      </div>
+      <div class="form-group"><label>メモ1</label><input type="text" id="input-memo1"></div>
+      <div class="form-group"><label>メモ2</label><input type="text" id="input-memo2"></div>
+      <div class="form-group"><label>メモ3</label><input type="text" id="input-memo3"></div>
+      <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
+
+      <div style="display:flex; gap:10px;">
+        <div class="form-group" style="flex:1;">
+          <label>構築担当者</label>
+          <select id="input-construction">
+            <option value="">(未設定)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>予約システム構築担当</label>
+          <select id="input-system">
+            <option value="">(未設定)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <div class="form-group" style="flex:1;">
+          <label>商談担当</label>
+          <select id="input-sales">
+            <option value="">(未設定)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>MTG担当者</label>
+          <select id="input-mtg">
+            <option value="">(未設定)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="btn-save" onclick="saveAssignment()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="card-log-modal" class="modal-overlay hidden">
+    <div class="modal" style="width: 500px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3><span class="material-icons">history</span> 操作履歴</h3>
+        <button class="btn-cancel" onclick="closeCardLogModal()" style="padding:4px 8px; font-size:12px;">✕</button>
+      </div>
+      <p id="log-card-name" style="font-size:12px; color:#666; margin-bottom:15px; font-weight:bold;"></p>
+
+      <div style="background:var(--input-bg); border:1px solid var(--border-color); border-radius:4px;">
+        <ul id="card-log-list" class="log-list">
+          <li style="padding:20px; text-align:center; color:#999;">読み込み中...</li>
+        </ul>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-save" onclick="closeCardLogModal()">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="move-modal" class="modal-overlay hidden">
+    <div class="modal" style="width:350px;">
+      <h3><span class="material-icons">drive_file_move</span> カードを移動</h3>
+      <p id="move-card-name"
+        style="font-size:12px; color:#666; margin-bottom:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      </p>
+
+      <div class="form-group">
+        <label>移動先のリストを選択</label>
+        <div id="move-list-container" class="move-list-container"></div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-cancel" onclick="closeMoveModal()">キャンセル</button>
+        <button class="btn-save" onclick="submitMove()">移動</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3><span class="material-icons">settings</span> 設定</h3>
+
+      <div class="settings-tabs">
+        <div class="settings-tab active" onclick="switchSettingsTab('general')">一般</div>
+        <div class="settings-tab" onclick="switchSettingsTab('game')">ゲーム設定</div>
+      </div>
+
+      <div id="settings-general" class="settings-content active">
+        <div class="form-group">
+          <label>表示テーマ</label>
+          <select id="select-theme" onchange="changeTheme()">
+            <option value="default">デフォルト (ライト)</option>
+            <option value="dark">ダークモード</option>
+            <option value="cat">猫モード 🐱</option>
+            <option value="dog">犬モード 🐶</option>
+            <option value="horse">馬モード (競馬風) 🏇</option>
+            <option value="dragon">ドラゴンモード 🐉</option>
+            <option value="neon">ネオンモード 🌃</option>
+            <option value="gaming">ゲーミングモード 🌈</option>
+            <option value="retro">レトロRPGモード 👾</option>
+            <option value="blueprint">設計図モード 📐</option>
+            <option value="japan">和風・浮世絵モード 🍵</option>
+          </select>
+        </div>
+        <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
+        <h4>背景設定</h4>
+        <div class="form-group">
+          <label>背景タイプ</label>
+          <select id="bg-type" onchange="toggleBgInput()">
+            <option value="none">なし (デフォルト)</option>
+            <option value="image">画像 (URL)</option>
+            <option value="video">動画 (URL)</option>
+          </select>
+        </div>
+        <div id="bg-input-group" class="form-group hidden">
+          <label>URL</label>
+          <input type="text" id="bg-url">
+        </div>
+        <div class="form-group">
+          <label>背景の暗さ</label>
+          <input type="range" id="bg-opacity" min="0" max="0.9" step="0.1" value="0.0" style="width:100%;">
+          <div style="text-align:right; font-size:10px;" id="opacity-val">0%</div>
+        </div>
+
+        <div class="form-group">
+          <label>背景サイズ (拡大/縮小)</label>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <input type="range" id="bg-scale" min="0.5" max="3.0" step="0.1" value="1.0" style="flex:1;"
+              oninput="updateBgTransform()">
+            <button type="button" onclick="resetBgParam('scale')"
+              style="border:1px solid #ccc; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; padding:2px 6px;">リセット</button>
+          </div>
+          <div style="text-align:right; font-size:10px;" id="scale-val">100%</div>
+        </div>
+
+        <div class="form-group">
+          <label>位置調整 X (左右)</label>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <input type="range" id="bg-pos-x" min="-50" max="50" step="1" value="0" style="flex:1;"
+              oninput="updateBgTransform()">
+            <button type="button" onclick="resetBgParam('x')"
+              style="border:1px solid #ccc; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; padding:2px 6px;">リセット</button>
+          </div>
+          <div style="text-align:right; font-size:10px;" id="pos-x-val">0%</div>
+        </div>
+
+        <div class="form-group">
+          <label>位置調整 Y (上下)</label>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <input type="range" id="bg-pos-y" min="-50" max="50" step="1" value="0" style="flex:1;"
+              oninput="updateBgTransform()">
+            <button type="button" onclick="resetBgParam('y')"
+              style="border:1px solid #ccc; background:#fff; border-radius:4px; font-size:10px; cursor:pointer; padding:2px 6px;">リセット</button>
+          </div>
+          <div style="text-align:right; font-size:10px;" id="pos-y-val">0%</div>
+        </div>
+
+        <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
+        <button class="btn-logout" onclick="performLogout()" title="ログアウト">
+          <span class="material-icons" style="font-size:16px;">logout</span> ログアウト
+        </button>
+      </div>
+
+      <div id="settings-game" class="settings-content">
+        <div class="form-group">
+          <label>ランキングプレート (Lv.80~)</label>
+          <select id="game-ranking-plate" onchange="GM.updateProfilePreview()">
+            <option value="">なし</option>
+            <option value="plate-galaxy">銀河</option>
+            <option value="plate-magma">マグマ</option>
+            <option value="plate-matrix">マトリックス</option>
+            <option value="plate-gold">黄金</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>名前エフェクト (Lv.50~)</label>
+          <select id="game-name-effect" onchange="GM.updateProfilePreview()">
+            <option value="">なし</option>
+            <option value="name-gaming">ゲーミング</option>
+            <option value="name-glitch">グリッチ</option>
+            <option value="name-burn">炎上</option>
+            <option value="name-neon">ネオン</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>ランクエンブレム (絵文字)</label>
+          <input type="text" id="game-rank-emblem" placeholder="例: ⚜️" oninput="GM.updateProfilePreview()">
+        </div>
+
+        <div class="form-group">
+          <label>ホバーアクション</label>
+          <select id="game-hover-action" onchange="GM.updateProfilePreview()">
+            <option value="">なし</option>
+            <option value="hover-shake">震える</option>
+            <option value="hover-pop">飛び出す</option>
+            <option value="hover-rotate">回転</option>
+            <option value="hover-flash">点滅</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>フレーバーテキスト</label>
+          <input type="text" id="game-flavor-text" placeholder="一言コメント" oninput="GM.updateProfilePreview()">
+        </div>
+        <div class="form-group">
+          <label>ユーザープロフィール装飾 (Lv.2~)</label>
+          <select id="game-profile-deco" onchange="GM.updateProfilePreview()">
+            <option value="">なし</option>
+          </select>
+          <div style="font-size:10px; color:#666; margin-top:4px;">プレビュー:</div>
+          <div id="profile-preview">
+            <span style="color:#999;">(ここにプレビューが表示されます)</span>
+          </div>
+        </div>
+        <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
+
+        <div class="form-group">
+          <label>演出設定</label>
+          <div style="display:flex; flex-wrap:wrap; gap:15px;">
+            <div style="flex:1; min-width:140px;">
+              <label style="display:block; margin-bottom:4px; font-size:10px;">クリック演出 (Lv.3~)</label>
+              <select id="game-particle-select" style="width:100%;">
+                <option value="">なし</option>
+                <option value="std">標準</option>
+                <option value="fire">炎</option>
+                <option value="ice">氷</option>
+                <option value="sakura">桜</option>
+                <option value="coin">コイン</option>
+                <option value="dark">闇</option>
+              </select>
+            </div>
+            <div style="flex:1; min-width:140px;">
+              <label style="display:block; margin-bottom:4px; font-size:10px;">オーラ (Lv.25~)</label>
+              <select id="game-aura-select" style="width:100%;">
+                <option value="">なし</option>
+                <option value="std">標準</option>
+                <option value="fire">業火</option>
+                <option value="ice">氷結</option>
+                <option value="thunder">雷神</option>
+                <option value="dark">暗黒</option>
+                <option value="rainbow">虹色</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:10px;">
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label class="toggle-switch-label" style="display:flex; align-items:center;">
+              <label class="toggle-switch"><input type="checkbox" id="game-sound-se"><span
+                  class="slider"></span></label>
+              <span style="margin-left:8px;">効果音 (Lv.20~)</span>
+            </label>
+            <label class="toggle-switch-label" style="display:flex; align-items:center;">
+              <label class="toggle-switch"><input type="checkbox" id="game-input-effect"><span
+                  class="slider"></span></label>
+              <span style="margin-left:8px;">入力エフェクト (Lv.12~)</span>
+            </label>
+            <label class="toggle-switch-label" style="display:flex; align-items:center;">
+              <label class="toggle-switch"><input type="checkbox" id="game-mascot"><span class="slider"></span></label>
+              <span style="margin-left:8px;">デスクトップマスコット (Lv.35~)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-cancel" onclick="closeSettingsModal()">キャンセル</button>
+        <button class="btn-save" onclick="saveBgSettings()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="shop-modal" class="modal-overlay hidden">
+    <div class="modal" style="width: 500px; max-height: 80vh;">
+      <h3><span class="material-icons">shopping_cart</span> XPショップ</h3>
+      <p style="font-size:12px; margin-bottom:15px; color:#666;">XPを消費して作業を自動化・効率化しよう！</p>
+
+      <div id="shop-items-container" style="overflow-y: auto; max-height: 60vh; padding-right: 5px;">
+      </div>
+
+      <div class="modal-buttons" style="border-top: 1px solid #eee; margin-top: 15px; padding-top: 10px;">
+        <button class="btn-save" onclick="document.getElementById('shop-modal').classList.add('hidden')">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ranking-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3><span class="material-icons">leaderboard</span> ユーザースコアランキング（30分ごとに更新されます）</h3>
+      <ul id="ranking-list" class="ranking-list">
+        <li style="text-align:center; padding:20px; color:#999;">読み込み中...</li>
+      </ul>
+      <div class="modal-buttons">
+        <button class="btn-save" onclick="document.getElementById('ranking-modal').classList.add('hidden')">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="race-modal" class="modal-overlay hidden">
+    <div class="modal" style="width:600px;">
+      <h3>🏇 競馬ゲーム <span id="race-timer" style="float:right; font-size:12px; color:red;"></span></h3>
+      <p>1着になる馬を予想して賭けよう！（倍率2倍〜10倍）</p>
+
+      <div id="race-betting-area">
+      </div>
+
+      <div id="race-view-area" class="hidden">
+        <div class="race-track" id="race-track">
+          <div class="race-goal-line"></div>
+        </div>
+        <div id="race-status" style="text-align:center; font-weight:bold; font-size:18px;"></div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn-cancel" onclick="document.getElementById('race-modal').classList.add('hidden')">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gacha-modal" class="modal-overlay hidden">
+    <div class="modal" style="text-align:center;">
+      <h3>🦄 名馬ガチャ (1回 500円)</h3>
+      <div id="gacha-animation-area"
+        style="min-height:150px; display:flex; align-items:center; justify-content:center;">
+        <button class="btn-save" onclick="GM.pullGacha()" style="padding:15px 30px; font-size:16px;">
+          引く！ (¥500)
+        </button>
+      </div>
+      <div style="margin-top:15px; font-size:12px; color:#666;">
+        獲得した馬はコレクションに追加されます
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" onclick="document.getElementById('gacha-modal').classList.add('hidden')">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="money-ranking-modal" class="modal-overlay hidden">
+    <div class="modal" style="width: 480px; max-width: 95vw; padding: 0; border-radius: 12px; overflow: hidden;">
+
+      <div
+        style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="margin: 0; font-size: 18px; color: #2c3e50; font-family: 'Orbitron', sans-serif;">
+            🏆 所持金ランキング
+          </h3>
+          <span style="font-size: 11px; color: #7f8c8d;">Top Players & You</span>
+        </div>
+        <button onclick="GM.openMoneyRanking()"
+          style="background:none; border:none; cursor:pointer; color:#0079bf; transition:transform 0.2s;"
+          onmouseover="this.style.transform='rotate(180deg)'" onmouseout="this.style.transform='rotate(0deg)'"
+          title="ランキングを更新">
+          <span class="material-icons" style="font-size: 24px;">refresh</span>
+        </button>
+      </div>
+
+      <div id="ranking-list-body" style="height: 400px; overflow-y: auto; background: #fff; padding: 10px;">
+        <div
+          style="display:flex; justify-content:center; align-items:center; height:100%; color:#aaa; flex-direction:column;">
+          <span class="material-icons" style="font-size:40px; margin-bottom:10px;">hourglass_empty</span>
+          <span>データ読み込み中...</span>
+        </div>
+      </div>
+
+      <div class="modal-buttons"
+        style="padding: 12px 20px; background: #f8f9fa; border-top: 1px solid #eaeaea; text-align: right; display: block;">
+        <button class="btn-cancel" onclick="document.getElementById('money-ranking-modal').classList.add('hidden')"
+          style="padding: 8px 25px;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard-modal" class="modal-overlay hidden">
+    <div class="modal" style="width:800px; max-width:90vw;">
+      <h3><span class="material-icons">analytics</span> 簡易ダッシュボード</h3>
+      <div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
+        <div style="width:350px; height:300px;">
+          <canvas id="chart-workload"></canvas>
+        </div>
+        <div style="width:350px; height:300px;">
+          <canvas id="chart-list"></canvas>
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel"
+          onclick="document.getElementById('dashboard-modal').classList.add('hidden')">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bulk-assign-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3><span class="material-icons">manage_accounts</span> 一括担当者設定</h3>
+      <p style="font-size:12px; color:#eb5a46;">※ 変更したい項目のみ選択してください。未選択の項目は変更されません。</p>
+
+      <div class="form-group">
+        <label>システム種別 1</label>
+        <select id="bulk-systemType">
+          <option value="">(変更しない)</option>
+          <option value="中江式予約システム/アンケート">中江式予約システム/アンケート</option>
+          <option value="Mokare">Mokare</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>システム種別 2</label>
+        <select id="bulk-systemType2">
+          <option value="">(変更しない)</option>
+          <option value="中江式予約システム/アンケート">中江式予約システム/アンケート</option>
+          <option value="Mokare">Mokare</option>
+        </select>
+      </div>
+      <hr style="border:0; border-top:1px solid #eee; margin: 10px 0;">
+
+      <div class="form-group"><label>構築担当者</label><select id="bulk-construction">
+          <option value="">(変更しない)</option>
+        </select></div>
+      <div class="form-group"><label>予約システム構築担当</label><select id="bulk-system">
+          <option value="">(変更しない)</option>
+        </select></div>
+      <div class="form-group"><label>商談担当</label><select id="bulk-sales">
+          <option value="">(変更しない)</option>
+        </select></div>
+      <div class="form-group"><label>MTG担当者</label><select id="bulk-mtg">
+          <option value="">(変更しない)</option>
+        </select></div>
+
+      <div class="modal-buttons">
+        <button class="btn-cancel"
+          onclick="document.getElementById('bulk-assign-modal').classList.add('hidden')">キャンセル</button>
+        <button class="btn-save" onclick="submitBulkAssign()">一括更新</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="memo-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3 style="margin:0;"><span class="material-icons">edit_note</span> メモ帳</h3>
+        <button class="btn-cancel" onclick="closeMemoModal()" style="padding:4px 8px; font-size:12px;">✕ 閉じる</button>
+      </div>
+
+      <div class="memo-container">
+        <div class="memo-left-panel">
+          <div class="memo-tabs">
+            <div class="memo-tab active" id="tab-memo-personal" onclick="switchMemoTab('personal')">個人メモ</div>
+            <div class="memo-tab" id="tab-memo-shared" onclick="switchMemoTab('shared')">全員へ共有</div>
+          </div>
+
+          <div id="card-memo-header-placeholder"></div>
+
+          <div class="form-group">
+            <label>内容</label>
+            <textarea id="memo-content" rows="6" placeholder="メモを入力..." style="resize: vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>関係者タグ付け (クリックで選択)</label>
+            <div id="memo-user-selector" class="related-users-selector">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>通知日時 (任意)</label>
+            <input type="datetime-local" id="memo-notify-time">
+          </div>
+
+          <div style="margin-top:auto; text-align:right;">
+            <button id="btn-add-memo" class="btn-save" onclick="execAddMemo()" style="width:100%;">
+              <span class="material-icons" style="font-size:16px; vertical-align:middle;">add_circle</span> 追加する
+            </button>
+          </div>
+        </div>
+
+        <div class="memo-center-panel">
+          <div
+            style="font-weight:bold; font-size:12px; color:#0079bf; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0079bf; padding-bottom:5px;">
+            <span><span class="material-icons" style="font-size:16px; vertical-align:middle;">assignment</span>
+              未完了タスク</span>
+            <span id="memo-count-unfinished"
+              style="background:#0079bf; color:white; padding:1px 8px; border-radius:10px; font-size:11px;">0</span>
+          </div>
+          <ul id="memo-list-unfinished" class="memo-list">
+          </ul>
+        </div>
+
+        <div class="memo-right-panel">
+          <div
+            style="font-weight:bold; font-size:12px; color:#555; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #999; padding-bottom:5px;">
+            <span><span class="material-icons" style="font-size:16px; vertical-align:middle;">task_alt</span>
+              完了済み</span>
+            <span id="memo-count-finished"
+              style="background:#999; color:white; padding:1px 8px; border-radius:10px; font-size:11px;">0</span>
+          </div>
+          <ul id="memo-list-finished" class="memo-list">
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <?!= include('javascript'); ?>
+</body>
+
+</html>
