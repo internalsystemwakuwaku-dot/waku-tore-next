@@ -46,6 +46,4 @@ local.db
 .vercel
 
 # Reference files
-*.gas
-*.html
-cookies.txt
+reference_files/
