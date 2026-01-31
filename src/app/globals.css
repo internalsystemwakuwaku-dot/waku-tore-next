@@ -1,244 +1,334 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
-}
-
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  :root {
+    --primary-color: #0079bf;
+    --bg-color: #f4f5f7;
+    --card-bg: #ffffff;
+    --text-color: #172b4d;
+    --sub-text: #5e6c84;
+    --list-bg: #ebecf0;
+    --border-color: #dfe1e6;
+    --header-bg: #ffffff;
+    --input-bg: #fafbfc;
+    --scrollbar-thumb: #bfc4ce;
+    --scrollbar-track: #f1f1f1;
+    --font-family: 'Noto Sans JP', sans-serif;
+    --border-radius: 4px;
+    --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --xp-color: #00c2e0;
+    --gold-color: #ffd700;
+    --rare-color: #9b59b6;
   }
+
   body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-noto-sans-jp), system-ui, sans-serif;
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s, background-image 0.3s, box-shadow 0.3s;
   }
 }
 
-/* Custom Animations */
-@keyframes float-up {
-  0% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
+/* =========================================
+   テーマ設定 (stylesheet.html より移植)
+   ========================================= */
+
+/* ダークモード */
+body.dark {
+  --primary-color: #5ba4cf;
+  --bg-color: #1d2125;
+  --card-bg: #22272b;
+  --text-color: #b6c2cf;
+  --sub-text: #9fadbc;
+  --list-bg: #101204;
+  --border-color: #3b4249;
+  --header-bg: #1d2125;
+  --input-bg: #22272b;
+  --scrollbar-thumb: #56606a;
+  --scrollbar-track: #1d2125;
 }
 
-@keyframes scale-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* 猫モード */
+body.cat {
+  --primary-color: #ff85a2;
+  --bg-color: #fff0f5;
+  --card-bg: #ffffff;
+  --text-color: #5d4037;
+  --sub-text: #9e8279;
+  --list-bg: #ffe4e1;
+  --border-color: #ffcdd2;
+  --header-bg: #ffffff;
+  --input-bg: #fffbf0;
+  --scrollbar-thumb: #ffb7b2;
+  --scrollbar-track: #fff0f5;
+  background-image:
+    radial-gradient(circle at 50% 30%, #ffd1dc 10%, transparent 11%),
+    radial-gradient(circle at 30% 60%, #ffd1dc 6%, transparent 7%),
+    radial-gradient(circle at 50% 70%, #ffd1dc 6%, transparent 7%),
+    radial-gradient(circle at 70% 60%, #ffd1dc 6%, transparent 7%);
+  background-size: 60px 60px;
+  background-repeat: repeat;
+}
+body.cat::after {
+  content: "🐱";
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 80px;
+  opacity: 0.5;
+  z-index: -1;
+  pointer-events: none;
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+/* 犬モード */
+body.dog {
+  --primary-color: #fb8c00;
+  --bg-color: #fff8e1;
+  --card-bg: #ffffff;
+  --text-color: #3e2723;
+  --sub-text: #6d4c41;
+  --list-bg: #ffe0b2;
+  --border-color: #ffe082;
+  --header-bg: #fffde7;
+  --input-bg: #ffffff;
+  --scrollbar-thumb: #ffcc80;
+  --scrollbar-track: #fff8e1;
+  background-image: linear-gradient(45deg, #ffe0b2 25%, transparent 25%, transparent 50%, #ffe0b2 50%, #ffe0b2 75%, transparent 75%, transparent);
+  background-size: 40px 40px;
+}
+body.dog::after {
+  content: "🐶";
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 80px;
+  opacity: 0.5;
+  z-index: -1;
+  pointer-events: none;
 }
 
-.animate-float-up {
-  animation: float-up 1s ease-out forwards;
+/* ドラゴンモード */
+body.dragon {
+  --primary-color: #d32f2f;
+  --bg-color: #263238;
+  --card-bg: #37474f;
+  --text-color: #eceff1;
+  --sub-text: #b0bec5;
+  --list-bg: #1c2529;
+  --border-color: #455a64;
+  --header-bg: #263238;
+  --input-bg: #37474f;
+  --scrollbar-thumb: #d32f2f;
+  --scrollbar-track: #263238;
+  background-image:
+    linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.2) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.2) 75%);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 0;
+}
+body.dragon::after {
+  content: "🐉";
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 80px;
+  opacity: 0.5;
+  z-index: -1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 5px #d32f2f);
 }
 
-.animate-scale-in {
-  animation: scale-in 0.3s ease-out forwards;
+/* ネオンモード */
+body.neon {
+  --primary-color: #00fff9;
+  --secondary-color: #ff00ff;
+  --bg-color: #0a0a12;
+  --card-bg: #12121a;
+  --text-color: #e0e0e0;
+  --sub-text: #a0a0b0;
+  --list-bg: #1a1a24;
+  --border-color: #333344;
+  --header-bg: #0f0f18;
+  --input-bg: #12121a;
+  --scrollbar-thumb: #00fff9;
+  --scrollbar-track: #0a0a12;
+  --font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+  background-image:
+    linear-gradient(rgba(0, 255, 249, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 249, 0.1) 1px, transparent 1px);
+  background-size: 30px 30px;
+  background-position: center center;
+}
+body.neon h1 {
+  text-shadow: 0 0 5px var(--primary-color);
 }
 
-.animate-shake {
-  animation: shake 0.3s ease-in-out;
+/* ゲーミングモード (アニメーション定義) */
+@keyframes rainbow-border {
+  0% { border-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
+  100% { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; }
+}
+@keyframes rainbow-bg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+body.gaming {
+  --primary-color: #ff0000;
+  --bg-color: #000000;
+  --card-bg: #111111;
+  --text-color: #ffffff;
+  --sub-text: #aaaaaa;
+  --list-bg: #0a0a0a;
+  --border-color: #333;
+  --header-bg: #080808;
+  --input-bg: #111111;
+  --scrollbar-thumb: #555;
+  --scrollbar-track: #111;
+  --font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+  background: linear-gradient(45deg, #1a1a1a, #000000);
+}
+body.gaming .trello-card {
+  border: 2px solid;
+  animation: rainbow-border 5s infinite alternate;
 }
 
-/* Theme: Cat */
-.theme-cat {
-  --primary: oklch(0.7 0.15 350);
-  --primary-foreground: oklch(1 0 0);
-  --background: oklch(0.98 0.02 350);
+/* レトロRPGモード */
+body.retro {
+  --primary-color: #d32f2f;
+  --bg-color: #fce4a8;
+  --card-bg: #ffffff;
+  --text-color: #212121;
+  --sub-text: #555555;
+  --list-bg: #8b4513;
+  --border-color: #000000;
+  --header-bg: #3e2723;
+  --input-bg: #fff8e1;
+  --scrollbar-thumb: #d32f2f;
+  --scrollbar-track: #fce4a8;
+  --font-family: 'DotGothic16', sans-serif;
+  --border-radius: 0px;
+  --box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+}
+body.retro::after {
+  content: "👾";
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 80px;
+  opacity: 0.8;
+  z-index: -1;
 }
 
-/* Theme: Dog */
-.theme-dog {
-  --primary: oklch(0.7 0.15 50);
-  --primary-foreground: oklch(1 0 0);
-  --background: oklch(0.98 0.02 50);
+/* 設計図モード */
+body.blueprint {
+  --primary-color: #ffffff;
+  --bg-color: #2c5ea8;
+  --card-bg: #2c5ea8;
+  --text-color: #ffffff;
+  --sub-text: #d0e0ff;
+  --list-bg: rgba(255, 255, 255, 0.1);
+  --border-color: #ffffff;
+  --header-bg: #224a85;
+  --input-bg: rgba(255, 255, 255, 0.1);
+  --scrollbar-thumb: #ffffff;
+  --scrollbar-track: #2c5ea8;
+  --font-family: 'Klee One', 'Noto Sans JP', sans-serif;
+  --border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --box-shadow: none;
+  background-image: linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: center center;
+  background-blend-mode: overlay;
+}
+body.blueprint::after {
+  content: "📐";
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 80px;
+  opacity: 0.5;
+  z-index: -1;
 }
 
-/* Theme: Horse */
-.theme-horse {
-  --primary: oklch(0.5 0.12 30);
-  --primary-foreground: oklch(1 0 0);
-  --background: oklch(0.95 0.02 80);
+/* 和風・浮世絵モード */
+body.japan {
+  --primary-color: #b7282e;
+  --bg-color: #f3f0e6;
+  --card-bg: #ffffff;
+  --text-color: #2f2725;
+  --sub-text: #706b67;
+  --list-bg: #e6e1d6;
+  --border-color: #9e8b7e;
+  --header-bg: #1f314a;
+  --input-bg: #f9f8f5;
+  --scrollbar-thumb: #b7282e;
+  --scrollbar-track: #f3f0e6;
+  --font-family: 'Shippori Mincho', serif;
+  --border-radius: 2px;
+  --box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZjNmMGU2Ii8+CjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNkZGQiIG9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4=');
+}
+body.japan::after {
+  content: "🍵";
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: 80px;
+  opacity: 0.5;
+  z-index: -1;
 }
 
-/* Theme: Dragon */
-.theme-dragon {
-  --primary: oklch(0.5 0.2 25);
-  --primary-foreground: oklch(1 0 0);
-  --background: oklch(0.15 0.02 25);
-  --foreground: oklch(0.9 0 0);
-  --card: oklch(0.2 0.02 25);
-  --card-foreground: oklch(0.9 0 0);
+/* 馬モード (G1・ダービースペシャル) */
+@keyframes turf-scroll {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 0 0, -1000px 1000px; }
 }
-
-/* Theme: Neon */
-.theme-neon {
-  --primary: oklch(0.8 0.3 180);
-  --primary-foreground: oklch(0.1 0 0);
-  --background: oklch(0.1 0.02 280);
-  --foreground: oklch(0.9 0.1 180);
-  --card: oklch(0.15 0.03 280);
-  --card-foreground: oklch(0.9 0.1 180);
+@keyframes gallop {
+  0% { transform: translateY(0) rotate(0deg) scaleX(-1); }
+  100% { transform: translateY(-20px) rotate(-5deg) scaleX(-1); }
 }
+body.horse {
+  --primary-color: #0b4d2c;
+  --secondary-color: #c5a059;
+  --accent-color: #d63031;
+  --bg-color: #f4f1ea;
+  --card-bg: #fffbf0;
+  --text-color: #2d1b0e;
+  --sub-text: #634f3d;
+  --list-bg: #e6dfcf;
+  --border-color: #8b5e3c;
+  --font-family: 'Shippori Mincho', 'Noto Sans JP', serif;
 
-/* Theme: Gaming (Rainbow gradient effect handled in components) */
-.theme-gaming {
-  --primary: oklch(0.7 0.25 280);
-  --background: oklch(0.1 0 0);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.15 0 0);
-  --card-foreground: oklch(0.95 0 0);
+  background-color: var(--primary-color);
+  background-image:
+    radial-gradient(circle at 50% 50%, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.05) 41%, rgba(0, 0, 0, 0.05) 50%, transparent 51%),
+    linear-gradient(45deg, #0b4d2c 25%, #0d5c35 25%, #0d5c35 50%, #0b4d2c 50%, #0b4d2c 75%, #0d5c35 75%, #0d5c35 100%);
+  background-size: 60px 60px, 40px 40px;
+  animation: turf-scroll 60s linear infinite;
+  
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23c5a059" stroke-width="2"><path d="M6 3C4 6 2 10 2 15c0 5 4 9 10 9s10-4 10-9c0-5-2-9-4-12"/><path d="M6 3h4"/><path d="M14 3h4"/><path d="M7 21l2-2"/><path d="M17 21l-2-2"/></svg>') 16 16, auto !important;
 }
-
-/* Theme: Retro RPG */
-.theme-retro {
-  --primary: oklch(0.6 0.15 140);
-  --background: oklch(0.2 0.05 100);
-  --foreground: oklch(0.95 0.05 80);
-  --card: oklch(0.25 0.05 100);
-  --card-foreground: oklch(0.95 0.05 80);
+body.horse header {
+  background: linear-gradient(to bottom, #1a1a1a, #2d1b0e);
+  border-bottom: 4px solid #c5a059;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
-
-/* Theme: Blueprint */
-.theme-blueprint {
-  --primary: oklch(0.6 0.15 230);
-  --background: oklch(0.25 0.08 230);
-  --foreground: oklch(0.95 0.02 230);
-  --card: oklch(0.3 0.08 230);
-  --card-foreground: oklch(0.95 0.02 230);
+body.horse h1 {
+  color: #c5a059;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
 }
-
-/* Theme: Japanese */
-.theme-japanese {
-  --primary: oklch(0.55 0.15 15);
-  --background: oklch(0.95 0.02 80);
-  --foreground: oklch(0.2 0.02 80);
-  --card: oklch(0.98 0.01 80);
-  --card-foreground: oklch(0.2 0.02 80);
+body.horse::after {
+  content: "🐎";
+  font-size: 150px;
+  position: fixed;
+  bottom: 20px;
+  right: -20px;
+  opacity: 0.8;
+  z-index: 0;
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.5));
+  animation: gallop 2s ease-in-out infinite alternate;
 }

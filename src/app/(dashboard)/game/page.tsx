@@ -9,9 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useGameStore } from '@/stores/gameStore';
 
 export default function GamePage() {
-  const money = useGameStore((state) => state.money);
-  const totalClicks = useGameStore((state) => state.totalClicks);
-  const autoClickers = useGameStore((state) => state.autoClickers);
+  const { gold, totalXp, autoXpPerSec } = useGameStore();
 
   return (
     <div className="space-y-6">
@@ -34,22 +32,22 @@ export default function GamePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              💰 {money.toLocaleString()}円
+              💰 {Math.floor(gold).toLocaleString()}円
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">クリック統計</CardTitle>
+            <CardTitle className="text-sm font-medium">生産性</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
               <div className="text-lg font-bold">
-                🍪 {totalClicks.toLocaleString()} clicks
+                ⚡ {Math.floor(totalXp).toLocaleString()} Total XP
               </div>
               <div className="text-sm text-muted-foreground">
-                Auto: {autoClickers}/秒
+                Auto: {autoXpPerSec.toLocaleString()} XP/s
               </div>
             </div>
           </CardContent>

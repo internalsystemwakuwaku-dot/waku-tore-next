@@ -52,20 +52,17 @@ export function GachaGame() {
   const [result, setResult] = useState<typeof GACHA_ITEMS[0] | null>(null);
   const [showResult, setShowResult] = useState(false);
 
-  const money = useGameStore((state) => state.money);
-  const spendMoney = useGameStore((state) => state.spendMoney);
-  const addMoney = useGameStore((state) => state.addMoney);
-  const addXp = useGameStore((state) => state.addXp);
+  // Use new store
+  const { gold, addGold, addXp } = useGameStore();
 
   const rollGacha = () => {
-    if (money < GACHA_COST) {
+    if (gold < GACHA_COST) {
       toast.error('所持金が足りません');
       return;
     }
 
-    if (!spendMoney(GACHA_COST)) {
-      return;
-    }
+    // Direct state update for spending money
+    useGameStore.setState((state) => ({ gold: state.gold - GACHA_COST }));
 
     setIsRolling(true);
     setShowResult(false);
@@ -91,9 +88,9 @@ export function GachaGame() {
 
       // Apply reward
       if (item.reward.type === 'money') {
-        addMoney(item.reward.amount);
+        addGold(item.reward.amount);
       } else if (item.reward.type === 'xp') {
-        addXp(item.reward.amount);
+        addXp(item.reward.amount, 'gacha');
       }
 
       if (item.rarity === 'legendary') {
@@ -109,7 +106,7 @@ export function GachaGame() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           🎰 ガチャ
-          <Badge variant="outline">所持金: {money.toLocaleString()}円</Badge>
+          <Badge variant="outline">所持金: {Math.floor(gold).toLocaleString()}円</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -163,7 +160,7 @@ export function GachaGame() {
         {/* Roll Button */}
         <Button
           onClick={rollGacha}
-          disabled={isRolling || money < GACHA_COST}
+          disabled={isRolling || gold < GACHA_COST}
           className="w-full"
           size="lg"
         >

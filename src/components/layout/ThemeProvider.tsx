@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useThemeStore, THEMES } from '@/stores/themeStore';
+import { useThemeStore } from '@/stores/themeStore';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const { theme } = useThemeStore();
   const [mounted, setMounted] = useState(false);
-  const { theme, backgroundUrl, backgroundOpacity } = useThemeStore();
 
   useEffect(() => {
     setMounted(true);
@@ -14,34 +14,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!mounted) return;
 
-    const root = document.documentElement;
+    // 既存のテーマクラスを削除
+    document.body.className = '';
 
-    // Remove all theme classes
-    Object.values(THEMES).forEach(({ className }) => {
-      if (className) {
-        root.classList.remove(className);
-      }
-    });
-
-    // Add current theme class
-    const themeConfig = THEMES[theme];
-    if (themeConfig?.className) {
-      root.classList.add(themeConfig.className);
+    // デフォルト以外の場合、クラスを追加
+    if (theme !== 'default') {
+      document.body.classList.add(theme);
     }
   }, [theme, mounted]);
 
-  return (
-    <>
-      {mounted && backgroundUrl && (
-        <div
-          className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url(${backgroundUrl})`,
-            opacity: backgroundOpacity,
-          }}
-        />
-      )}
-      {children}
-    </>
-  );
+  // ハイドレーション不一致を防ぐため、マウントされるまでは何もレンダリングしないか、
+  // あるいはサーバーサイドレンダリングの結果と一致させる工夫が必要ですが、
+  // ここではbodyへのクラス適用が主目的なのでchildrenはそのまま返します。
+  // bodyへのクラス操作はuseEffectで行われるため、クライアントサイドでのみ実行されます。
+
+  return <>{children}</>;
 }

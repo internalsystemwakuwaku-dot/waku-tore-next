@@ -5,23 +5,27 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { useThemeStore, THEMES } from '@/stores/themeStore';
+import { useThemeStore } from '@/stores/themeStore';
+import { THEMES } from '@/lib/themes';
 import { useGameStore } from '@/stores/gameStore';
 import { signOut } from '@/lib/auth-client';
 import { toast } from 'sonner';
-import type { ThemeName } from '@/types';
+import type { ThemeName } from '@/types'; // 型定義があれば使うが、なければany or string
 
 export default function SettingsPage() {
   const { theme, backgroundUrl, backgroundOpacity, setTheme, setBackgroundUrl, setBackgroundOpacity } =
     useThemeStore();
-  const { settings, updateSettings } = useGameStore();
+
+  // Use new properties from gameStore
+  const { soundEnabled, particleEnabled, toggleSound, toggleParticle } = useGameStore();
 
   const [bgInput, setBgInput] = useState(backgroundUrl || '');
 
-  const handleThemeChange = (newTheme: ThemeName) => {
-    setTheme(newTheme);
-    toast.success(`テーマを「${THEMES[newTheme].displayName}」に変更しました`);
+  // ThemeName型が厳密でない場合に備えてキャスト
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme as any);
+    // @ts-ignore
+    toast.success(`テーマを「${THEMES.find(t => t.id === newTheme)?.name || newTheme}」に変更しました`);
   };
 
   const handleBackgroundSave = () => {
@@ -46,15 +50,15 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {(Object.entries(THEMES) as [ThemeName, typeof THEMES[ThemeName]][]).map(
-              ([key, value]) => (
+            {THEMES.map(
+              (themeItem) => (
                 <Button
-                  key={key}
-                  variant={theme === key ? 'default' : 'outline'}
+                  key={themeItem.id}
+                  variant={theme === themeItem.id ? 'default' : 'outline'}
                   className="h-auto py-2"
-                  onClick={() => handleThemeChange(key)}
+                  onClick={() => handleThemeChange(themeItem.id)}
                 >
-                  {value.displayName}
+                  {themeItem.name}
                 </Button>
               )
             )}
@@ -123,10 +127,10 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button
-              variant={settings.soundEnabled ? 'default' : 'outline'}
-              onClick={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
+              variant={soundEnabled ? 'default' : 'outline'}
+              onClick={toggleSound}
             >
-              {settings.soundEnabled ? 'ON' : 'OFF'}
+              {soundEnabled ? 'ON' : 'OFF'}
             </Button>
           </div>
 
@@ -138,10 +142,10 @@ export default function SettingsPage() {
               </p>
             </div>
             <Button
-              variant={settings.particleEnabled ? 'default' : 'outline'}
-              onClick={() => updateSettings({ particleEnabled: !settings.particleEnabled })}
+              variant={particleEnabled ? 'default' : 'outline'}
+              onClick={toggleParticle}
             >
-              {settings.particleEnabled ? 'ON' : 'OFF'}
+              {particleEnabled ? 'ON' : 'OFF'}
             </Button>
           </div>
         </CardContent>

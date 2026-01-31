@@ -1,188 +1,166 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { GameData, GameSettings } from '@/types/game';
-import { LEVELS, XP_REWARDS } from '@/types/game';
+import { RANKS, SHOP_ITEMS, ShopItem, XP_BASE } from '@/lib/game/constants';
+import { toast } from 'sonner';
 
-interface GameStore {
-  // State
+interface GameState {
+  // Stats
   xp: number;
+  totalXp: number; // 累積XP（ランク計算用）
+  gold: number;
   level: number;
-  money: number;
-  totalClicks: number;
-  autoClickers: number;
-  purchasedItems: string[];
-  settings: GameSettings;
-  isInitialized: boolean;
+
+  // Inventory
+  inventory: Record<string, number>; // itemId -> count
+
+  // Settings
+  soundEnabled: boolean;
+  particleEnabled: boolean;
+
+  // Computed
+  clickPower: number;
+  autoXpPerSec: number;
 
   // Actions
-  initGame: (data?: Partial<GameData>) => void;
-  addXp: (amount: number, type?: keyof typeof XP_REWARDS) => void;
-  addMoney: (amount: number) => void;
-  spendMoney: (amount: number) => boolean;
-  incrementClicks: () => void;
-  purchaseItem: (itemId: string, price: number) => boolean;
-  purchaseAutoClicker: (price: number) => boolean;
-  updateSettings: (settings: Partial<GameSettings>) => void;
+  addXp: (amount: number, source?: string) => void;
+  addGold: (amount: number) => void;
+  buyItem: (itemId: string) => boolean;
+  calculateRank: () => string;
+  calculateNextRankXp: () => number;
+  toggleSound: () => void;
+  toggleParticle: () => void;
   resetGame: () => void;
 }
 
-const calculateLevel = (xp: number): number => {
-  for (let i = LEVELS.length - 1; i >= 0; i--) {
-    if (xp >= LEVELS[i].requiredXp) {
-      return LEVELS[i].level;
-    }
-  }
-  return 1;
-};
-
-const getLevelInfo = (level: number) => {
-  return LEVELS.find((l) => l.level === level) || LEVELS[0];
-};
-
-const initialSettings: GameSettings = {
-  profileEffect: null,
-  rankPlate: null,
-  hoverAction: null,
-  soundEnabled: true,
-  particleEnabled: true,
-};
-
-const initialState = {
-  xp: 0,
-  level: 1,
-  money: 1000,
-  totalClicks: 0,
-  autoClickers: 0,
-  purchasedItems: [] as string[],
-  settings: initialSettings,
-  isInitialized: false,
-};
-
-export const useGameStore = create<GameStore>()(
+export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
-      ...initialState,
+      xp: 0,
+      totalXp: 0,
+      gold: 1000, // 初期所持金
+      level: 0,
+      inventory: {},
+      soundEnabled: true,
+      particleEnabled: true,
 
-      initGame: (data) => {
-        if (data) {
-          set({
-            xp: data.xp ?? 0,
-            level: data.level ?? calculateLevel(data.xp ?? 0),
-            money: data.money ?? 1000,
-            totalClicks: data.totalClicks ?? 0,
-            autoClickers: data.autoClickers ?? 0,
-            purchasedItems: data.purchasedItems ?? [],
-            settings: data.settings ?? initialSettings,
-            isInitialized: true,
+      clickPower: 1,
+      autoXpPerSec: 0,
+
+      addXp: (amount, source) => {
+        const { xp, totalXp, calculateRank } = get();
+        const currentRankName = calculateRank();
+
+        // XP加算
+        const newXp = xp + amount;
+        const newTotalXp = totalXp + amount;
+
+        set({ xp: newXp, totalXp: newTotalXp });
+
+        // ランクアップチェック (簡易的: 名前が変わったら通知)
+        const newRankName = get().calculateRank();
+        if (currentRankName !== newRankName) {
+          toast.success(`ランクアップ！`, {
+            description: `「${newRankName}」になりました！`,
           });
-        } else {
-          set({ isInitialized: true });
         }
       },
 
-      addXp: (amount, type) => {
-        const currentXp = get().xp;
-        const currentLevel = get().level;
-        const newXp = currentXp + amount;
-        const newLevel = calculateLevel(newXp);
+      addGold: (amount) => {
+        set((state) => ({ gold: state.gold + amount }));
+      },
+
+      buyItem: (itemId) => {
+        const { gold, inventory, autoXpPerSec, clickPower } = get();
+        const item = SHOP_ITEMS.find((i) => i.id === itemId);
+
+        if (!item) return false;
+
+        // 価格計算 (所持数に応じて増加: base * 1.15^count)
+        const count = inventory[itemId] || 0;
+        const cost = Math.floor(item.baseCost * Math.pow(1.15, count));
+
+        if (gold < cost) {
+          toast.error('お金が足りません！');
+          return false;
+        }
+
+        // UNIQUEアイテムチェック
+        if (item.isUnique && count > 0) {
+          toast.error('このユニークアイテムは既に所持しています！');
+          return false;
+        }
+
+        // 購入処理
+        const newInventory = { ...inventory, [itemId]: count + 1 };
+
+        // ステータス反映
+        let newAutoXp = autoXpPerSec;
+        let newClickPower = clickPower;
+
+        if (item.type === 'auto' && item.xpPerSec) {
+          newAutoXp += item.xpPerSec;
+        }
+        if (item.type === 'click' && item.clickPower) {
+          newClickPower += item.clickPower;
+        }
 
         set({
-          xp: newXp,
-          level: newLevel,
+          gold: gold - cost,
+          inventory: newInventory,
+          autoXpPerSec: newAutoXp,
+          clickPower: newClickPower,
         });
 
-        // Check for level up
-        if (newLevel > currentLevel) {
-          // Could trigger level up animation/sound here
-          console.log(`Level up! ${currentLevel} -> ${newLevel}`);
+        toast.success(`${item.name}を購入しました！`);
+        return true;
+      },
+
+      calculateRank: () => {
+        const { totalXp } = get();
+        // 累積XPを超えている最大のランクを探す
+        // RANKSは昇順でソートされている前提 (constants.tsを確認済み)
+        // 後ろから探索するか、適切にfindLast的なロジックが必要
+
+        // 効率のため後ろからチェック
+        for (let i = RANKS.length - 1; i >= 0; i--) {
+          if (totalXp >= RANKS[i].minXp) {
+            return RANKS[i].name;
+          }
         }
+        return RANKS[0].name;
       },
 
-      addMoney: (amount) => {
-        set((state) => ({ money: state.money + amount }));
-      },
-
-      spendMoney: (amount) => {
-        const currentMoney = get().money;
-        if (currentMoney >= amount) {
-          set({ money: currentMoney - amount });
-          return true;
+      calculateNextRankXp: () => {
+        const { totalXp } = get();
+        for (let i = 0; i < RANKS.length; i++) {
+          if (totalXp < RANKS[i].minXp) {
+            return RANKS[i].minXp - totalXp;
+          }
         }
-        return false;
+        return 0; // カンスト
       },
 
-      incrementClicks: () => {
-        set((state) => ({
-          totalClicks: state.totalClicks + 1,
-        }));
-        get().addXp(XP_REWARDS.COOKIE_CLICK);
-      },
+      toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
+      toggleParticle: () => set((state) => ({ particleEnabled: !state.particleEnabled })),
 
-      purchaseItem: (itemId, price) => {
-        const state = get();
-        if (state.money >= price && !state.purchasedItems.includes(itemId)) {
+      resetGame: () => {
+        if (confirm('本当にデータをリセットしますか？この操作は取り消せません。')) {
           set({
-            money: state.money - price,
-            purchasedItems: [...state.purchasedItems, itemId],
+            xp: 0,
+            totalXp: 0,
+            gold: 0,
+            level: 0,
+            inventory: {},
+            autoXpPerSec: 0,
+            clickPower: 1,
           });
-          return true;
+          toast.info('データをリセットしました。');
         }
-        return false;
       },
-
-      purchaseAutoClicker: (price) => {
-        const state = get();
-        if (state.money >= price) {
-          set({
-            money: state.money - price,
-            autoClickers: state.autoClickers + 1,
-          });
-          return true;
-        }
-        return false;
-      },
-
-      updateSettings: (newSettings) => {
-        set((state) => ({
-          settings: { ...state.settings, ...newSettings },
-        }));
-      },
-
-      resetGame: () => set(initialState),
     }),
     {
-      name: 'waku-tore-game',
+      name: 'waku-tore-game-storage',
+      // 特定のフィールドだけ永続化することも可能だが、全部保存でOK
     }
   )
 );
-
-// Selectors
-export const useXp = () => useGameStore((state) => state.xp);
-export const useLevel = () => useGameStore((state) => state.level);
-export const useMoney = () => useGameStore((state) => state.money);
-export const useLevelInfo = () => {
-  const level = useGameStore((state) => state.level);
-  return getLevelInfo(level);
-};
-
-export const useXpProgress = () => {
-  const xp = useGameStore((state) => state.xp);
-  const level = useGameStore((state) => state.level);
-
-  const currentLevelInfo = getLevelInfo(level);
-  const nextLevelInfo = LEVELS.find((l) => l.level > level);
-
-  if (!nextLevelInfo) {
-    return { current: xp, required: xp, progress: 100 };
-  }
-
-  const currentLevelXp = currentLevelInfo?.requiredXp ?? 0;
-  const nextLevelXp = nextLevelInfo.requiredXp;
-  const progress = ((xp - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100;
-
-  return {
-    current: xp - currentLevelXp,
-    required: nextLevelXp - currentLevelXp,
-    progress: Math.min(100, Math.max(0, progress)),
-  };
-};

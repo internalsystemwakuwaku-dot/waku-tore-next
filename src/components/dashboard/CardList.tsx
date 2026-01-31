@@ -139,7 +139,7 @@ export function CardList({
           return (
             <div
               key={list.id}
-              className="flex-shrink-0 w-72 bg-secondary/50 rounded-lg p-3"
+              className="flex-shrink-0 w-72 bg-[var(--list-bg)] rounded-[var(--border-radius)] p-3 border border-[var(--border-color)]"
             >
               {/* List Header */}
               <div className="flex items-center justify-between mb-3">

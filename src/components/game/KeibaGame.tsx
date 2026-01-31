@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,9 +35,15 @@ export function KeibaGame() {
   const [betType, setBetType] = useState<BetType>('win');
   const [positions, setPositions] = useState<number[]>([0, 0, 0, 0, 0, 0]);
 
-  const money = useGameStore((state) => state.money);
-  const spendMoney = useGameStore((state) => state.spendMoney);
-  const addMoney = useGameStore((state) => state.addMoney);
+  // Use new game store
+  const { gold, addGold } = useGameStore();
+
+  // Helper to spend money
+  const spendMoney = (amount: number) => {
+    if (gold < amount) return false;
+    useGameStore.setState((state) => ({ gold: state.gold - amount }));
+    return true;
+  };
 
   const toggleHorse = (id: number) => {
     if (selectedHorses.includes(id)) {
@@ -56,7 +62,7 @@ export function KeibaGame() {
       return;
     }
 
-    if (betAmount > money) {
+    if (betAmount > gold) {
       toast.error('所持金が足りません');
       return;
     }
@@ -152,7 +158,7 @@ export function KeibaGame() {
     }
 
     if (won) {
-      addMoney(payout);
+      addGold(payout); // Changed from addMoney
       toast.success(`当たり！ ${payout.toLocaleString()}円 獲得！`);
     } else {
       toast.error('残念... ハズレでした');
@@ -171,7 +177,7 @@ export function KeibaGame() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           🏇 競馬ゲーム
-          <Badge variant="outline">所持金: {money.toLocaleString()}円</Badge>
+          <Badge variant="outline">所持金: {Math.floor(gold).toLocaleString()}円</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -12,91 +12,114 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useGameStore, useLevelInfo, useXpProgress } from '@/stores/gameStore';
+import { useGameStore } from '@/stores/gameStore';
+import { Progress } from '@/components/ui/progress';
+import { Coins, Trophy, Zap, ShoppingBag, Settings, Gift } from 'lucide-react';
+import { useThemeStore } from '@/stores/themeStore';
 
 export function Header() {
   const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
-  const levelInfo = useLevelInfo();
-  const xpProgress = useXpProgress();
-  const money = useGameStore((state) => state.money);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Game Store
+  const {
+    xp, totalXp, gold, calculateRank, calculateNextRankXp,
+    autoXpPerSec, clickPower
+  } = useGameStore();
+
+  const { theme } = useThemeStore();
+  const [rankName, setRankName] = useState('');
+  const [nextRankXp, setNextRankXp] = useState(0);
+  const [renderProgress, setRenderProgress] = useState(0);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    window.location.reload();
-  };
+  useEffect(() => {
+    setRankName(calculateRank());
+    setNextRankXp(calculateNextRankXp());
+    setRenderProgress(Math.min(100, Math.max(0, (totalXp % 1000) / 10))); // 仮計算
+  }, [xp, totalXp, calculateRank, calculateNextRankXp]);
 
   const handleSignOut = async () => {
     await signOut();
     window.location.href = '/login';
   };
 
+  if (!mounted) return null;
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+    <header className="sticky top-0 z-50 w-full border-b bg-[var(--header-bg)] text-[var(--text-color)] transition-colors duration-300 shadow-sm backdrop-blur-md bg-opacity-90 supports-[backdrop-filter]:bg-opacity-60">
+      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+
         {/* Logo */}
-        <div className="mr-4 flex">
+        <div className="mr-4 flex items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <span className="font-bold text-xl">わく☆とれ</span>
-            <span className="text-xs text-muted-foreground">v2.0.0</span>
+            {theme !== 'default' && <span className="text-xs opacity-70 ml-2">{theme} mode</span>}
           </Link>
         </div>
 
-        {/* Game Status */}
-        {session && mounted && (
-          <div className="flex items-center gap-4 flex-1">
-            {/* Level Badge */}
-            <div
-              className="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium"
-              style={{ backgroundColor: levelInfo.color + '20', color: levelInfo.color }}
-            >
-              <span>Lv.{levelInfo.level}</span>
-              <span>{levelInfo.name}</span>
+        {/* Game Status (Only if logged in) */}
+        {session && (
+          <>
+            {/* Rank & XP */}
+            <div className="hidden md:flex flex-col items-start min-w-[120px] mr-4">
+              <span className="text-xs text-[var(--sub-text)] flex items-center gap-1 font-bold">
+                <Trophy className="w-3 h-3 text-yellow-500" />
+                RANK
+              </span>
+              <span className="text-sm font-bold truncate max-w-[200px]" title={rankName}>
+                {rankName}
+              </span>
             </div>
 
-            {/* XP Bar */}
-            <div className="flex-1 max-w-xs">
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all duration-300"
-                  style={{ width: `${xpProgress.progress}%` }}
-                />
+            <div className="hidden md:flex flex-col w-[120px] lg:w-[200px] gap-1 mr-4">
+              <div className="flex justify-between text-xs items-end">
+                <span className="text-[var(--sub-text)]">Next Rank</span>
+                <span className="font-mono text-[var(--primary-color)] font-bold">-{nextRankXp.toLocaleString()}</span>
               </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {xpProgress.current.toLocaleString()} / {xpProgress.required.toLocaleString()} XP
+              <Progress value={renderProgress} className="h-2 bg-[var(--border-color)]" indicatorClassName="bg-[var(--primary-color)] transition-all duration-500" />
+            </div>
+
+            {/* Auto & Click Stats (Desktop only) */}
+            <div className="hidden lg:flex items-center gap-4 mr-4">
+              <div className="flex items-center gap-2 px-3 py-1 bg-[var(--input-bg)] rounded-full border border-[var(--border-color)]">
+                <Zap className="w-3 h-3 text-blue-500 fill-blue-500" />
+                <span className="font-mono font-bold text-xs">{autoXpPerSec.toLocaleString()} /s</span>
               </div>
             </div>
 
-            {/* Money */}
-            <div className="flex items-center gap-1 text-sm font-medium text-yellow-600">
-              <span>💰</span>
-              <span>{money.toLocaleString()}</span>
+            {/* Gold Area */}
+            <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100/50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
+                <Coins className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="font-mono font-bold text-yellow-700 dark:text-yellow-300">
+                  {Math.floor(gold).toLocaleString()} G
+                </span>
+              </div>
+
+              {/* Game Actions */}
+              <Button variant="outline" size="icon" className="relative hover:bg-[var(--primary-color)] hover:text-white transition-colors border-[var(--border-color)]">
+                <ShoppingBag className="w-5 h-5" />
+              </Button>
+
+              <Button variant="outline" size="icon" className="hover:bg-[var(--primary-color)] hover:text-white transition-colors border-[var(--border-color)]">
+                <Gift className="w-5 h-5" />
+              </Button>
             </div>
-          </div>
+          </>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            {isRefreshing ? '更新中...' : '🔄 更新'}
-          </Button>
-
+        {/* User Menu */}
+        <div className="flex items-center gap-2 ml-4">
           {session ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>
+                  <Avatar className="h-8 w-8 border border-[var(--border-color)]">
+                    <AvatarFallback className="bg-[var(--primary-color)] text-white">
                       {session.user.name?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -113,13 +136,6 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/settings">⚙️ 設定</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/memos">📝 メモ帳</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/game">🎮 ゲーム</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   🚪 ログアウト
                 </DropdownMenuItem>
