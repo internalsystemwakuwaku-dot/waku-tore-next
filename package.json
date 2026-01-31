@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build --no-lint",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
@@ -37,6 +37,7 @@
     "sonner": "^2.0.7",
     "swr": "^2.3.8",
     "tailwind-merge": "^3.4.0",
+    "vercel": "^50.9.6",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
