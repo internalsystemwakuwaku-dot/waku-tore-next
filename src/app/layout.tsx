@@ -21,6 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
+      <head>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Klee+One:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Orbitron:wght@500;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet" />
+      </head>
       <body className={`${notoSansJP.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>

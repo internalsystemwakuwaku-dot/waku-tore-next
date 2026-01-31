@@ -96,6 +96,10 @@ export interface TrelloBoardData {
 export interface ExtendedCard extends TrelloCard {
   assignment?: CardAssignment;
   memos?: CardMemo[];
+  attributes?: {
+    industries: string[];
+    prefectures: string[];
+  };
 }
 
 // Local assignment data

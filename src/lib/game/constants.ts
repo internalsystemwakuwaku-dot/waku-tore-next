@@ -336,3 +336,9 @@ export const XP_ACTIONS = {
     login: 50, firstLogin: 200, dailyBonus: 50,
     move: 20, assign: 30, memo: 15, create: 25, complete: 100, pin: 10
 };
+
+// 開催スケジュール設定 (javascript.html line 495-498)
+export const RACE_SCHEDULE = [
+    { h: 9, m: 55 }, { h: 10, m: 55 }, { h: 11, m: 55 }, { h: 12, m: 30 },
+    { h: 13, m: 55 }, { h: 14, m: 55 }, { h: 15, m: 55 }, { h: 16, m: 55 }, { h: 17, m: 55 }
+];

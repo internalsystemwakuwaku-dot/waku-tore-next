@@ -21,6 +21,13 @@ interface GameState {
   clickPower: number;
   autoXpPerSec: number;
 
+  // Race Data
+  raceData: {
+    newspaper: any; // 簡易的な型定義。詳細が必要ならinterfaceを作る
+    activeBets: any[];
+    lastRaceId: string;
+  };
+
   // Actions
   addXp: (amount: number, source?: string) => void;
   addGold: (amount: number) => void;
@@ -30,6 +37,12 @@ interface GameState {
   toggleSound: () => void;
   toggleParticle: () => void;
   resetGame: () => void;
+
+  // Race Actions
+  setRaceData: (data: any) => void;
+  addBet: (bet: any) => void;
+  clearBets: () => void;
+  checkRace: () => void; // レース進行チェック用
 }
 
 export const useGameStore = create<GameState>()(
@@ -37,11 +50,17 @@ export const useGameStore = create<GameState>()(
     (set, get) => ({
       xp: 0,
       totalXp: 0,
-      gold: 1000, // 初期所持金
+      gold: 1000,
       level: 0,
       inventory: {},
       soundEnabled: true,
       particleEnabled: true,
+
+      raceData: {
+        newspaper: null,
+        activeBets: [],
+        lastRaceId: '',
+      },
 
       clickPower: 1,
       autoXpPerSec: 0,
@@ -153,14 +172,117 @@ export const useGameStore = create<GameState>()(
             inventory: {},
             autoXpPerSec: 0,
             clickPower: 1,
+            raceData: { newspaper: null, activeBets: [], lastRaceId: '' },
           });
           toast.info('データをリセットしました。');
         }
       },
+
+      setRaceData: (data) => set((state) => ({ raceData: { ...state.raceData, ...data } })),
+
+      addBet: (bet) => {
+        const { gold, raceData } = get();
+        if (gold < bet.amount) {
+          toast.error('お金が足りません！');
+          return;
+        }
+        set({
+          gold: gold - bet.amount,
+          raceData: {
+            ...raceData,
+            activeBets: [...raceData.activeBets, bet]
+          }
+        });
+        toast.success(`投票しました！`);
+      },
+
+      clearBets: () => set((state) => ({ raceData: { ...state.raceData, activeBets: [] } })),
+
+      checkRace: () => {
+        const { raceData, addGold, addXp } = get();
+        if (!raceData.newspaper || raceData.activeBets.length === 0) return;
+
+        // レースID ("YYYYMMDD_HHMM") から時刻をパース
+        const raceId = raceData.newspaper.raceId;
+
+        // すでに判定済みのレースならスキップ
+        if (raceData.lastRaceId === raceId) return;
+
+        const parts = raceId.split('_');
+        if (parts.length !== 2) return;
+
+        const timeStr = parts[1];
+        const raceH = parseInt(timeStr.slice(0, 2));
+        const raceM = parseInt(timeStr.slice(2, 4));
+
+        const now = new Date();
+        const raceTime = new Date();
+        const idY = parseInt(parts[0].slice(0, 4));
+        const idMonth = parseInt(parts[0].slice(4, 6)) - 1;
+        const idD = parseInt(parts[0].slice(6, 8));
+
+        raceTime.setFullYear(idY, idMonth, idD);
+        raceTime.setHours(raceH, raceM, 0, 0);
+
+        // レース終了時刻（+5分）まで待つ
+        const raceEndTime = new Date(raceTime.getTime() + 2 * 60 * 1000); // 待機時間は2分に変更（テストしやすくするため）
+
+        // まだレース中なら何もしない
+        if (now < raceEndTime) return;
+
+        // --- 結果判定 ---
+        const horses = raceData.newspaper.horses;
+
+        // 簡易抽選: adjustedSpeed を重みとして1着を決定
+        const totalSpeed = horses.reduce((acc: number, h: any) => acc + h.adjustedSpeed, 0);
+        let r = Math.random() * totalSpeed;
+        let winner = horses[0];
+        for (const h of horses) {
+          if (r < h.adjustedSpeed) {
+            winner = h;
+            break;
+          }
+          r -= h.adjustedSpeed;
+        }
+
+        // 配当計算
+        let totalPayout = 0;
+        let winCount = 0;
+
+        raceData.activeBets.forEach((bet: any) => {
+          // 単勝のみ判定
+          if (bet.horseId === winner.id) {
+            const payout = Math.floor(bet.amount * bet.odds);
+            totalPayout += payout;
+            winCount++;
+          }
+        });
+
+        if (totalPayout > 0) {
+          addGold(totalPayout);
+          toast.success(`レース結果確定！`, {
+            description: `1着: ${winner.name}\nおめでとうございます！ ${totalPayout.toLocaleString()}G 獲得しました！`,
+            duration: 8000
+          });
+          addXp(100 * winCount, 'race'); // 勝利ボーナスXP
+        } else {
+          toast.info(`レース結果確定`, {
+            description: `1着: ${winner.name}\n残念、ハズレです...`,
+            duration: 5000
+          });
+        }
+
+        // ベットクリア ＆ lastRaceId更新（再判定防止）
+        set((state) => ({
+          raceData: {
+            ...state.raceData,
+            activeBets: [],
+            lastRaceId: raceId
+          }
+        }));
+      },
     }),
     {
       name: 'waku-tore-game-storage',
-      // 特定のフィールドだけ永続化することも可能だが、全部保存でOK
     }
-  )
-);
+  ));
