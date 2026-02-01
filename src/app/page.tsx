@@ -5,6 +5,7 @@ import { useGameStore } from '@/stores/gameStore';
 import { useRace } from '@/hooks/useRace';
 import { useOmikuji } from '@/hooks/useOmikuji';
 import { useTrelloStore } from '@/stores/trelloStore';
+import { signIn, signUp } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { RANKS, RACE_SCHEDULE, SHOP_ITEMS } from '@/lib/game/constants';
 
@@ -241,7 +242,73 @@ export default function Home() {
         }
     };
     const performLogout = () => console.log('performLogout');
-    const performLogin = () => console.log('performLogin');
+    // --- Auth Logic ---
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(true);
+    const [isSignUpMode, setIsSignUpMode] = useState(false);
+    const [loginFormData, setLoginFormData] = useState({ id: '', pass: '', name: '' });
+    const [loginError, setLoginError] = useState('');
+    const [isAuthLoading, setIsAuthLoading] = useState(false);
+
+    const performLogin = async () => {
+        setLoginError('');
+        setIsAuthLoading(true);
+
+        // Demo Bypass Check
+        if (loginFormData.id === 'demo' && loginFormData.pass === 'demo') {
+            toast.success('デモモードで開始します');
+            setIsLoginModalOpen(false);
+            setIsAuthLoading(false);
+            return;
+        }
+
+        try {
+            const result = await signIn.email({
+                email: loginFormData.id,
+                password: loginFormData.pass,
+            });
+
+            if (result.error) {
+                console.error(result.error);
+                setLoginError(`ログイン失敗: ${result.error.message || '認証エラー'} (DB接続なし環境の可能性あり)`);
+                // Auto-fallback
+                // toast.info('デモモードで続行します');
+                // setIsLoginModalOpen(false);
+            } else {
+                toast.success('ログインしました');
+                setIsLoginModalOpen(false);
+            }
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            setLoginError(`エラー: ${msg}`);
+        } finally {
+            setIsAuthLoading(false);
+        }
+    };
+
+    const performSignUp = async () => {
+        setLoginError('');
+        setIsAuthLoading(true);
+
+        try {
+            const result = await signUp.email({
+                email: loginFormData.id,
+                password: loginFormData.pass,
+                name: loginFormData.name || 'User',
+            });
+
+            if (result.error) {
+                setLoginError(`登録失敗: ${result.error.message}`);
+            } else {
+                toast.success('アカウントを作成しました');
+                setIsLoginModalOpen(false);
+            }
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            setLoginError(`エラー: ${msg}`);
+        } finally {
+            setIsAuthLoading(false);
+        }
+    };
     const toggleBgmMinify = () => console.log('toggleBgmMinify');
     const stopBgm = () => console.log('stopBgm');
     const toggleBgm = (type: string) => console.log('toggleBgm', type);
@@ -410,15 +477,76 @@ export default function Home() {
                 </div>
             </div>
 
-            <div id="login-overlay">
-                <div className="login-box">
-                    <h2>ログイン</h2>
-                    <input type="text" id="login-id" className="login-input" placeholder="ID" />
-                    <input type="password" id="login-pass" className="login-input" placeholder="パスワード" />
-                    <button className="btn-login" onClick={performLogin}>ログイン</button>
-                    <div id="login-error" className="login-error"></div>
+            {isLoginModalOpen && (
+                <div id="login-overlay">
+                    <div className="login-box">
+                        <h2>{isSignUpMode ? '新規登録' : 'ログイン'}</h2>
+                        {isSignUpMode && (
+                            <input
+                                type="text"
+                                className="login-input"
+                                placeholder="名前"
+                                value={loginFormData.name}
+                                onChange={(e) => setLoginFormData({ ...loginFormData, name: e.target.value })}
+                            />
+                        )}
+                        <input
+                            type="text"
+                            className="login-input"
+                            placeholder="メールアドレス (ID)"
+                            value={loginFormData.id}
+                            onChange={(e) => setLoginFormData({ ...loginFormData, id: e.target.value })}
+                        />
+                        <input
+                            type="password"
+                            className="login-input"
+                            placeholder="パスワード"
+                            value={loginFormData.pass}
+                            onChange={(e) => setLoginFormData({ ...loginFormData, pass: e.target.value })}
+                        />
+
+                        {isSignUpMode ? (
+                            <button className="btn-login" onClick={performSignUp} disabled={isAuthLoading}>
+                                {isAuthLoading ? '処理中...' : '登録して開始'}
+                            </button>
+                        ) : (
+                            <button className="btn-login" onClick={performLogin} disabled={isAuthLoading}>
+                                {isAuthLoading ? '処理中...' : 'ログイン'}
+                            </button>
+                        )}
+
+                        <div style={{ marginTop: '10px', fontSize: '12px' }}>
+                            <span
+                                style={{ color: '#aaa', cursor: 'pointer', textDecoration: 'underline' }}
+                                onClick={() => {
+                                    setLoginError('');
+                                    setIsSignUpMode(!isSignUpMode);
+                                }}
+                            >
+                                {isSignUpMode ? 'ログインに戻る' : '新規アカウント作成はこちら'}
+                            </span>
+                        </div>
+
+                        <div style={{ marginTop: '15px' }}>
+                            <button
+                                style={{ background: 'transparent', border: '1px dashed #f1c40f', color: '#f1c40f', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                                onClick={() => {
+                                    toast.info('デモモードで開始します');
+                                    setIsLoginModalOpen(false);
+                                }}
+                            >
+                                🧪 デモモード（ログイン不要）
+                            </button>
+                        </div>
+
+                        {loginError && (
+                            <div id="login-error" className="login-error" style={{ display: 'block', color: '#ff6b6b', marginTop: '10px', whiteSpace: 'pre-wrap' }}>
+                                {loginError}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div id="bg-video-container">
                 <video autoPlay muted loop id="bg-video"></video>
