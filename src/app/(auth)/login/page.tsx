@@ -84,7 +84,6 @@ export default function LoginPage() {
         }
       }
     } catch (error) {
-    } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error('Unexpected error:', error);
       setErrorLog(`Unexpected error: ${errorMsg}\n\nStack: ${error instanceof Error ? error.stack : ''}`);
