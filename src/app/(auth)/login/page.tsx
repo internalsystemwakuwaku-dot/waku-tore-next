@@ -171,6 +171,16 @@ export default function LoginPage() {
               <span className="material-icons mr-2 text-sm">science</span>
               デモモードで開始 (ログイン不要)
             </Button>
+            {/* Fallback link for CSS issues */}
+            <div style={{ marginTop: '10px', textAlign: 'center', fontSize: '12px' }}>
+              <a href="/" style={{ color: '#d97706', textDecoration: 'underline' }} onClick={(e) => {
+                e.preventDefault();
+                toast.info('デモモードでログインします');
+                router.push('/');
+              }}>
+                [CSS読込エラー用] デモモードで開始
+              </a>
+            </div>
           </div>
 
           {errorLog && (
@@ -181,6 +191,9 @@ export default function LoginPage() {
           )}
         </CardContent>
       </Card>
+      <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: '#333', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', zIndex: 9999 }}>
+        Ver: 2026.02.01-REV2
+      </div>
     </div>
   );
 }
