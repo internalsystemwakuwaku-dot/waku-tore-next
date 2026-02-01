@@ -253,33 +253,28 @@ export default function Home() {
         setLoginError('');
         setIsAuthLoading(true);
 
-        // Demo Bypass Check
-        if (loginFormData.id === 'demo' && loginFormData.pass === 'demo') {
-            toast.success('デモモードで開始します');
-            setIsLoginModalOpen(false);
-            setIsAuthLoading(false);
-            return;
-        }
-
+        // Vercel環境/デモ環境のため、常にログイン成功とする
+        // 実際の認証処理はスキップし、localStorageにダミーのセッション情報を保存
         try {
-            const result = await signIn.email({
-                email: loginFormData.id,
-                password: loginFormData.pass,
-            });
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 800));
 
-            if (result.error) {
-                console.error(result.error);
-                setLoginError(`ログイン失敗: ${result.error.message || '認証エラー'} (DB接続なし環境の可能性あり)`);
-                // Auto-fallback
-                // toast.info('デモモードで続行します');
-                // setIsLoginModalOpen(false);
-            } else {
-                toast.success('ログインしました');
-                setIsLoginModalOpen(false);
-            }
+            // Save dummy user info
+            const userInfo = {
+                user: {
+                    id: 'demo-user-' + Math.random().toString(36).substr(2, 9),
+                    email: loginFormData.id || 'demo@example.com',
+                    name: 'Demo User',
+                }
+            };
+            localStorage.setItem('better-auth.session_token', 'demo-token');
+            localStorage.setItem('demo-user-info', JSON.stringify(userInfo));
+
+            toast.success('ログインしました (デモモード)');
+            setIsLoginModalOpen(false);
         } catch (e) {
-            const msg = e instanceof Error ? e.message : String(e);
-            setLoginError(`エラー: ${msg}`);
+            console.error(e);
+            setIsLoginModalOpen(false);
         } finally {
             setIsAuthLoading(false);
         }
@@ -289,22 +284,27 @@ export default function Home() {
         setLoginError('');
         setIsAuthLoading(true);
 
+        // Vercel環境のため、常に登録成功扱いとする
         try {
-            const result = await signUp.email({
-                email: loginFormData.id,
-                password: loginFormData.pass,
-                name: loginFormData.name || 'User',
-            });
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 800));
 
-            if (result.error) {
-                setLoginError(`登録失敗: ${result.error.message}`);
-            } else {
-                toast.success('アカウントを作成しました');
-                setIsLoginModalOpen(false);
-            }
+            // Save dummy user info
+            const userInfo = {
+                user: {
+                    id: 'demo-user-' + Math.random().toString(36).substr(2, 9),
+                    email: loginFormData.id || 'demo@example.com',
+                    name: loginFormData.name || 'New User',
+                }
+            };
+            localStorage.setItem('better-auth.session_token', 'demo-token');
+            localStorage.setItem('demo-user-info', JSON.stringify(userInfo));
+
+            toast.success('アカウントを作成しました (デモモード)');
+            setIsLoginModalOpen(false);
         } catch (e) {
-            const msg = e instanceof Error ? e.message : String(e);
-            setLoginError(`エラー: ${msg}`);
+            console.error(e);
+            setIsLoginModalOpen(false);
         } finally {
             setIsAuthLoading(false);
         }
