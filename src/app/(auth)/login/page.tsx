@@ -18,6 +18,7 @@ export default function LoginPage() {
     password: '',
     name: '',
   });
+  const [errorLog, setErrorLog] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +39,7 @@ export default function LoginPage() {
 
         if (result.error) {
           console.error('Sign up error:', result.error);
+          setErrorLog(JSON.stringify(result.error, null, 2));
           // Vercelデプロイ時のフォールバック処理
           toast.info('デモモードでアカウント作成しました (DB接続なし)');
           router.push('/');
@@ -82,8 +84,11 @@ export default function LoginPage() {
         }
       }
     } catch (error) {
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
       console.error('Unexpected error:', error);
-      toast.error('エラーが発生しました: ' + (error instanceof Error ? error.message : String(error)));
+      setErrorLog(`Unexpected error: ${errorMsg}\n\nStack: ${error instanceof Error ? error.stack : ''}`);
+      toast.error('エラーが発生しました: ' + errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -153,6 +158,28 @@ export default function LoginPage() {
               {isSignUp ? '既にアカウントをお持ちの方はこちら' : '新規アカウント作成はこちら'}
             </button>
           </div>
+
+          <div className="mt-6 border-t pt-4">
+            <Button
+              variant="outline"
+              className="w-full border-dashed border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+              onClick={() => {
+                toast.info('デモモードでログインします');
+                router.push('/');
+                router.refresh();
+              }}
+            >
+              <span className="material-icons mr-2 text-sm">science</span>
+              デモモードで開始 (ログイン不要)
+            </Button>
+          </div>
+
+          {errorLog && (
+            <div className="mt-4 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-200 overflow-auto max-h-40">
+              <p className="font-bold mb-1">エラーログ (開発者用):</p>
+              <pre className="whitespace-pre-wrap break-all">{errorLog}</pre>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
