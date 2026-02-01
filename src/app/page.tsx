@@ -548,6 +548,10 @@ export default function Home() {
                 </div>
             )}
 
+            <div style={{ position: 'fixed', bottom: '10px', right: '10px', background: '#333', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', zIndex: 9999 }}>
+                Ver: 2026.02.01-REV3
+            </div>
+
             <div id="bg-video-container">
                 <video autoPlay muted loop id="bg-video"></video>
                 <div id="bg-overlay"></div>
