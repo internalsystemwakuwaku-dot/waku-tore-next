@@ -36,11 +36,12 @@ async function fetchTrello<T>(endpoint: string, options: RequestInit = {}): Prom
             return [
                 {
                     id: 'cf-1',
+                    idModel: 'board-1',
                     name: '構築No.',
                     type: 'list',
                     options: [
-                        { id: 'opt-1', value: { text: "101" } },
-                        { id: 'opt-2', value: { text: "102" } }
+                        { id: 'opt-1', idCustomField: 'cf-1', value: { text: "101" }, pos: 1 },
+                        { id: 'opt-2', idCustomField: 'cf-1', value: { text: "102" }, pos: 2 }
                     ]
                 }
             ] as unknown as T;
@@ -63,12 +64,8 @@ async function fetchTrello<T>(endpoint: string, options: RequestInit = {}): Prom
                     idBoard: 'board-1',
                     pos: 100,
                     dateLastActivity: new Date().toISOString(),
-                    shortLink: 'link1',
                     shortUrl: 'https://trello.com/c/link1',
-                    url: 'https://trello.com/c/link1',
-                    idMembers: [],
-                    idLabels: ['l1'],
-                    idChecklists: []
+                    url: 'https://trello.com/c/link1'
                 },
                 {
                     id: 'card-2',
@@ -85,12 +82,8 @@ async function fetchTrello<T>(endpoint: string, options: RequestInit = {}): Prom
                     idBoard: 'board-1',
                     pos: 200,
                     dateLastActivity: new Date().toISOString(),
-                    shortLink: 'link2',
                     shortUrl: 'https://trello.com/c/link2',
-                    url: 'https://trello.com/c/link2',
-                    idMembers: [],
-                    idLabels: ['l2'],
-                    idChecklists: []
+                    url: 'https://trello.com/c/link2'
                 },
                 {
                     id: 'card-3',
@@ -107,12 +100,8 @@ async function fetchTrello<T>(endpoint: string, options: RequestInit = {}): Prom
                     idBoard: 'board-1',
                     pos: 300,
                     dateLastActivity: new Date().toISOString(),
-                    shortLink: 'link3',
                     shortUrl: 'https://trello.com/c/link3',
-                    url: 'https://trello.com/c/link3',
-                    idMembers: [],
-                    idLabels: [],
-                    idChecklists: []
+                    url: 'https://trello.com/c/link3'
                 }
             ];
             return mockCards as unknown as T;
