@@ -55,9 +55,20 @@ async function fetchTrello<T>(endpoint: string, options: RequestInit = {}): Prom
                     idList: 'list-2',
                     due: new Date(Date.now() + 86400000).toISOString(),
                     dueComplete: false,
-                    labels: [{ id: 'l1', name: 'Bug', color: 'red' }],
+                    labels: [{ id: 'l1', name: 'Bug', color: 'red', idBoard: 'board-1' }],
                     checklists: [],
-                    customFieldItems: []
+                    customFieldItems: [],
+                    // Required fields fillers
+                    closed: false,
+                    idBoard: 'board-1',
+                    pos: 100,
+                    dateLastActivity: new Date().toISOString(),
+                    shortLink: 'link1',
+                    shortUrl: 'https://trello.com/c/link1',
+                    url: 'https://trello.com/c/link1',
+                    idMembers: [],
+                    idLabels: ['l1'],
+                    idChecklists: []
                 },
                 {
                     id: 'card-2',
@@ -66,9 +77,20 @@ async function fetchTrello<T>(endpoint: string, options: RequestInit = {}): Prom
                     idList: 'list-1',
                     due: null,
                     dueComplete: false,
-                    labels: [{ id: 'l2', name: 'Design', color: 'blue' }],
+                    labels: [{ id: 'l2', name: 'Design', color: 'blue', idBoard: 'board-1' }],
                     checklists: [],
-                    customFieldItems: []
+                    customFieldItems: [],
+                    // Required fields fillers
+                    closed: false,
+                    idBoard: 'board-1',
+                    pos: 200,
+                    dateLastActivity: new Date().toISOString(),
+                    shortLink: 'link2',
+                    shortUrl: 'https://trello.com/c/link2',
+                    url: 'https://trello.com/c/link2',
+                    idMembers: [],
+                    idLabels: ['l2'],
+                    idChecklists: []
                 },
                 {
                     id: 'card-3',
@@ -79,7 +101,18 @@ async function fetchTrello<T>(endpoint: string, options: RequestInit = {}): Prom
                     dueComplete: true,
                     labels: [],
                     checklists: [],
-                    customFieldItems: []
+                    customFieldItems: [],
+                    // Required fields fillers
+                    closed: false,
+                    idBoard: 'board-1',
+                    pos: 300,
+                    dateLastActivity: new Date().toISOString(),
+                    shortLink: 'link3',
+                    shortUrl: 'https://trello.com/c/link3',
+                    url: 'https://trello.com/c/link3',
+                    idMembers: [],
+                    idLabels: [],
+                    idChecklists: []
                 }
             ];
             return mockCards as unknown as T;
